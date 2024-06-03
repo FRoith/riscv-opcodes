@@ -9,6 +9,7 @@ import logging
 import collections
 import yaml
 import sys
+from collections import Counter
 
 pp = pprint.PrettyPrinter(indent=2)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:: %(message)s')
@@ -1310,7 +1311,7 @@ def make_toml(instr_dict):
     reg_int = False
     reg_float = False
     reg_vec = False
-    reg_vm = False
+    reg_vm = True
     reg_vtypei = False
     
     for lut in my_lut:
@@ -1369,11 +1370,19 @@ def make_toml(instr_dict):
 type = \"{type_dict[part_type]}\"""", file=of)
         print(f"[{format_name}.repr]", file=of)
         ##TODO Figure out repr with help of objdump
-        first_match = next(instr for instr in instr_dict if part_type == "_".join(instr_dict[instr]["variable_fields"]))
-        mask = int(instr_dict[first_match]['mask'], base=0)
-        match = int(instr_dict[first_match]['match'], base=0)
-        var_fields = instr_dict[first_match]['variable_fields']
-        print(f"default = \"{get_from_objdump(first_match, mask, match, var_fields)}\"", file=of)
+        all_matches = [instr for instr in instr_dict if part_type == "_".join(instr_dict[instr]["variable_fields"])]
+        cool_matches = {}
+        for first_match in all_matches:
+            mask = int(instr_dict[first_match]['mask'], base=0)
+            match = int(instr_dict[first_match]['match'], base=0)
+            var_fields = instr_dict[first_match]['variable_fields']
+            cool_matches[first_match] = get_from_objdump(first_match, mask, match, var_fields)
+        
+        most_common, _ = Counter(cool_matches.values).most_common(1)[0]
+        print(f"default = \"{most_common}\"", file=of)
+        for key in cool_matches:
+            print(f"{key} = \"{cool_matches[key]}\"", file=of)
+
         print(f"[{format_name}.instructions]", file=of)
         for instr in instr_dict:
             if instr == "vsetivli":
