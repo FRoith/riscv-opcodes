@@ -1263,6 +1263,8 @@ def get_from_objdump(name, mask, match, var_fields):
                 if x != y:
                     outformat = outformat.replace(f"${i}$", f"%{variable}%")
                 i += 1
+        if f"${i-1}$" in outformat:
+            outformat = outformat.replace(f"${i-1}$", baseline[i-1])
         if f"${i}$" in outformat:
             outformat = outformat.replace(f"${i}$", baseline[i])
         return f"$name$ {outformat}"
