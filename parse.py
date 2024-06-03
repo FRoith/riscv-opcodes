@@ -1388,7 +1388,8 @@ type = \"{type_dict[part_type]}\"""", file=of)
         most_common, _ = Counter(cool_matches.values()).most_common(1)[0]
         print(f"default = \"{most_common}\"", file=of)
         for key in cool_matches:
-            print(f"{key} = \"{cool_matches[key]}\"", file=of)
+            if cool_matches[key] != most_common:
+                print(f"{key} = \"{cool_matches[key]}\"", file=of)
 
         print(f"[{format_name}.instructions]", file=of)
         for instr in instr_dict:
