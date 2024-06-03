@@ -1249,7 +1249,7 @@ def get_from_objdump(name, mask, match, var_fields):
     re_patt, outformat = create_pattern(data_args)
     baseline = re.match(re_patt, data_args).groups([1,2,3])
     if data_name != name.replace("_", "."):
-        raise Exception(f"Unknown instruction {data}")
+        raise Exception(f"Unknown instruction {data_name} {data_args}")
     if len(data_args) > 0:
         var_fmts = []
         reg_maps = {}
@@ -1260,6 +1260,11 @@ def get_from_objdump(name, mask, match, var_fields):
             other = re.match(re_patt, new_args).groups([1,2,3])
             i = 0
             for x,y in zip(baseline, other):
+                if i == 3:
+                    print("---------")
+                    print(baseline)
+                    print(other)
+                    print("---------")
                 if x != y:
                     outformat = outformat.replace(f"${i}$", f"%{variable}%")
                 i += 1
