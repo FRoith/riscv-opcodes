@@ -1253,6 +1253,8 @@ def get_from_objdump(name, mask, match, var_fields):
     data_name, data_args = aquire_parts(match)
     re_patt, outformat = create_pattern(data_args)
     baseline = re.match(re_patt, data_args).groups([1,2,3])
+    if data_name is "<unknown>":
+        return "<unknown>"
     if data_name != name.replace("_", "."):
         raise Exception(f"Unknown instruction {data_name} {data_args}")
     if len(data_args) > 0:
