@@ -13,6 +13,228 @@ import sys
 pp = pprint.PrettyPrinter(indent=2)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:: %(message)s')
 
+Register_int = [
+    "zero",
+    "ra",
+    "sp",
+    "gp",
+    "tp",
+    "t0",
+    "t1",
+    "t2",
+    "s0",
+    "s1",
+    "a0",
+    "a1",
+    "a2",
+    "a3",
+    "a4",
+    "a5",
+    "a6",
+    "a7",
+    "s2",
+    "s3",
+    "s4",
+    "s5",
+    "s6",
+    "s7",
+    "s8",
+    "s9",
+    "s10",
+    "s11",
+    "t3",
+    "t4",
+    "t5",
+    "t6",
+]
+Register_float = [
+    "ft0",
+    "ft1",
+    "ft2",
+    "ft3",
+    "ft4",
+    "ft5",
+    "ft6",
+    "ft7",
+    "fs0",
+    "fs1",
+    "fa0",
+    "fa1",
+    "fa2",
+    "fa3",
+    "fa4",
+    "fa5",
+    "fa6",
+    "fa7",
+    "fs2",
+    "fs3",
+    "fs4",
+    "fs5",
+    "fs6",
+    "fs7",
+    "fs8",
+    "fs9",
+    "fs10",
+    "fs11",
+    "ft8",
+    "ft9",
+    "ft10",
+    "ft11",
+]
+Register_vec = [
+    "v0",
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "v6",
+    "v7",
+    "v8",
+    "v9",
+    "v10",
+    "v11",
+    "v12",
+    "v13",
+    "v14",
+    "v15",
+    "v16",
+    "v17",
+    "v18",
+    "v19",
+    "v20",
+    "v21",
+    "v22",
+    "v23",
+    "v24",
+    "v25",
+    "v26",
+    "v27",
+    "v28",
+    "v29",
+    "v30",
+    "v31",
+]
+Register_vm = [
+    ", v0.t",
+    "",
+]
+
+Register_vtypei = {
+0: "e8, m1, tu, mu",
+1: "e8, m2, tu, mu",
+2: "e8, m4, tu, mu",
+3: "e8, m8, tu, mu",
+5: "e8, mf8, tu, mu",
+6: "e8, mf4, tu, mu",
+7: "e8, mf2, tu, mu",
+8: "e16, m1, tu, mu",
+9: "e16, m2, tu, mu",
+10: "e16, m4, tu, mu",
+11: "e16, m8, tu, mu",
+13: "e16, mf8, tu, mu",
+14: "e16, mf4, tu, mu",
+15: "e16, mf2, tu, mu",
+16: "e32, m1, tu, mu",
+17: "e32, m2, tu, mu",
+18: "e32, m4, tu, mu",
+19: "e32, m8, tu, mu",
+21: "e32, mf8, tu, mu",
+22: "e32, mf4, tu, mu",
+23: "e32, mf2, tu, mu",
+24: "e64, m1, tu, mu",
+25: "e64, m2, tu, mu",
+26: "e64, m4, tu, mu",
+27: "e64, m8, tu, mu",
+29: "e64, mf8, tu, mu",
+30: "e64, mf4, tu, mu",
+31: "e64, mf2, tu, mu",
+64: "e8, m1, ta, mu",
+65: "e8, m2, ta, mu",
+66: "e8, m4, ta, mu",
+67: "e8, m8, ta, mu",
+69: "e8, mf8, ta, mu",
+70: "e8, mf4, ta, mu",
+71: "e8, mf2, ta, mu",
+72: "e16, m1, ta, mu",
+73: "e16, m2, ta, mu",
+74: "e16, m4, ta, mu",
+75: "e16, m8, ta, mu",
+77: "e16, mf8, ta, mu",
+78: "e16, mf4, ta, mu",
+79: "e16, mf2, ta, mu",
+80: "e32, m1, ta, mu",
+81: "e32, m2, ta, mu",
+82: "e32, m4, ta, mu",
+83: "e32, m8, ta, mu",
+85: "e32, mf8, ta, mu",
+86: "e32, mf4, ta, mu",
+87: "e32, mf2, ta, mu",
+88: "e64, m1, ta, mu",
+89: "e64, m2, ta, mu",
+90: "e64, m4, ta, mu",
+91: "e64, m8, ta, mu",
+93: "e64, mf8, ta, mu",
+94: "e64, mf4, ta, mu",
+95: "e64, mf2, ta, mu",
+128: "e8, m1, tu, ma",
+129: "e8, m2, tu, ma",
+130: "e8, m4, tu, ma",
+131: "e8, m8, tu, ma",
+133: "e8, mf8, tu, ma",
+134: "e8, mf4, tu, ma",
+135: "e8, mf2, tu, ma",
+136: "e16, m1, tu, ma",
+137: "e16, m2, tu, ma",
+138: "e16, m4, tu, ma",
+139: "e16, m8, tu, ma",
+141: "e16, mf8, tu, ma",
+142: "e16, mf4, tu, ma",
+143: "e16, mf2, tu, ma",
+144: "e32, m1, tu, ma",
+145: "e32, m2, tu, ma",
+146: "e32, m4, tu, ma",
+147: "e32, m8, tu, ma",
+149: "e32, mf8, tu, ma",
+150: "e32, mf4, tu, ma",
+151: "e32, mf2, tu, ma",
+152: "e64, m1, tu, ma",
+153: "e64, m2, tu, ma",
+154: "e64, m4, tu, ma",
+155: "e64, m8, tu, ma",
+157: "e64, mf8, tu, ma",
+158: "e64, mf4, tu, ma",
+159: "e64, mf2, tu, ma",
+192: "e8, m1, ta, ma",
+193: "e8, m2, ta, ma",
+194: "e8, m4, ta, ma",
+195: "e8, m8, ta, ma",
+197: "e8, mf8, ta, ma",
+198: "e8, mf4, ta, ma",
+199: "e8, mf2, ta, ma",
+200: "e16, m1, ta, ma",
+201: "e16, m2, ta, ma",
+202: "e16, m4, ta, ma",
+203: "e16, m8, ta, ma",
+205: "e16, mf8, ta, ma",
+206: "e16, mf4, ta, ma",
+207: "e16, mf2, ta, ma",
+208: "e32, m1, ta, ma",
+209: "e32, m2, ta, ma",
+210: "e32, m4, ta, ma",
+211: "e32, m8, ta, ma",
+213: "e32, mf8, ta, ma",
+214: "e32, mf4, ta, ma",
+215: "e32, mf2, ta, ma",
+216: "e64, m1, ta, ma",
+217: "e64, m2, ta, ma",
+218: "e64, m4, ta, ma",
+219: "e64, m8, ta, ma",
+221: "e64, mf8, ta, ma",
+222: "e64, mf4, ta, ma",
+223: "e64, mf2, ta, ma"
+}
+
 def process_enc_line(line, ext):
     '''
     This function processes each line of the encoding files (rv*). As part of
@@ -978,6 +1200,429 @@ func encode(a obj.As) *inst {
     except:
         pass
 
+def create_pattern(data_args):
+    patt = data_args
+    if Register_vm[0] in patt:
+        patt = patt.replace(Register_vm[0], "%R_VM%")
+    if Register_vtypei[0] in patt:
+        patt = patt.replace(Register_vtypei[0], "%R_VTI%")
+    if Register_vec[0] in patt:
+        patt = patt.replace(Register_vec[0], "%R_V%")
+    if Register_int[0] in patt:
+        patt = patt.replace(Register_int[0], "%R_I%")
+    if Register_float[0] in patt:
+        patt = patt.replace(Register_float[0], "%R_F%")
+    if "0" in patt:
+        patt = patt.replace("0", "%I%")
+    
+    patt_out = patt
+    patt = "^" + re.escape(patt) + "$"
+    patt = patt.replace("%R_VM%", f"({re.escape(Register_vm[0])}|{re.escape(Register_vm[1])})")
+    patt = patt.replace("%R_VTI%", f"({re.escape(Register_vtypei[0])}|{re.escape(Register_vtypei[1])})")
+    patt = patt.replace("%R_V%", f"({re.escape(Register_vec[0])}|{re.escape(Register_vec[1])})")
+    patt = patt.replace("%R_I%", f"({re.escape(Register_int[0])}|{re.escape(Register_int[1])})")
+    patt = patt.replace("%R_F%", f"({re.escape(Register_float[0])}|{re.escape(Register_float[1])})")
+    patt = patt.replace("%I%", f"(-?0x[0-9a-f]+|-?[0-9]+)")
+    i = 0
+    while "%" in patt_out:
+        patt_out = re.sub("%R_[A-Z]*%|%I%", f"${i}$", patt_out, 1)
+        i += 1
+    return patt, patt_out
+
+def aquire_parts(val_to_aquire):
+    RVPATH = "/opt/rv32/bin/"
+    f = open("/tmp/rvobj", "wb")
+    f.write(val_to_aquire.to_bytes(4, byteorder="little"))
+    f.close()
+    os.system(f"{RVPATH}llvm-objcopy -I binary -O elf32-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
+    os.system(f"{RVPATH}llvm-objdump --mattr=+A,+M,+F,+D,+C,+V -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
+    f = open("/tmp/rvdump", "r")
+    data = f.read()
+    f.close()
+    data = data.strip().split("\t")
+    return data[1], data[2]
+
+def get_from_objdump(name, mask, match, var_fields):
+    data_name, data_args = aquire_parts(match)
+    re_patt, outformat = create_pattern(data_args)
+    baseline = re.match(re_patt, data_args).groups([1,2,3])
+    if data_name != name.replace("_", "."):
+        raise Exception(f"Unknown instruction {data}")
+    if len(data_args) > 0:
+        var_fmts = []
+        reg_maps = {}
+        for variable in var_fields:
+            top, bot = arg_lut[variable]
+            val = match | (1 << bot)
+            _, new_args = aquire_parts(val)
+            other = re.match(re_patt, new_args).groups([1,2,3])
+            i = 0
+            for x,y in zip(baseline, other):
+                if x != y:
+                    outformat = outformat.replace(f"${i}$", f"%{variable}%")
+                i += 1
+        return f"$name$ {outformat}"
+    else:
+        return "$name$"
+
+def make_toml(instr_dict):
+    setname = "RV32V"
+    width = 32
+    type_dict = {}
+    my_lut = {}
+    i = 0
+    for instr in instr_dict:
+        type_key = "_".join(instr_dict[instr]["variable_fields"])
+        for part in instr_dict[instr]["variable_fields"]:
+            if part not in my_lut:
+                my_lut[part] = arg_lut[part]
+        if type_key not in type_dict:
+            i+=1
+            type_dict[type_key] = f"type_{i}"
+    
+    my_part_types = {}
+    
+    for typ in type_dict:
+        i = 31
+        pts = typ.split("_")
+        part_type = []
+        for pt in pts:
+            if my_lut[pt][0] < i:
+                part_type.append(("none", i, my_lut[pt][0]+1))
+            part_type.append((pt, my_lut[pt][0]-my_lut[pt][1], 0))
+            i = my_lut[pt][1]-1
+        if i > 0:
+            part_type.append(("none", i, 0))
+        my_part_types[typ] = part_type
+    
+    of = open("instr-table.toml", "w")
+    print(f"set = {setname}\nwidth = {width}\n", file=of)
+    print("[types]\nnames = [", file=of)
+    for part_type in my_part_types:
+        print(f"    \"{type_dict[part_type].replace('type', 'format')}\",", file=of)
+    print("]\nparts = [", file=of)
+    
+    reg_int = False
+    reg_float = False
+    reg_vec = False
+    reg_vm = False
+    reg_vtypei = False
+    
+    for lut in my_lut:
+        if "imm" in lut:
+            rt = "VInt"
+        elif lut.startswith("rs") or lut.startswith("rd"):
+            rt = "Register_int"
+            reg_int = True
+        elif lut.startswith("fs") or lut.startswith("fd"):
+            rt = "Register_float"
+            reg_float = True
+        elif lut.startswith("vs") or lut.startswith("vd"):
+            rt = "Register_vec"
+            reg_vec = True
+        elif lut == "vm":
+            rt = "Register_vm"
+            reg_vec = True
+        else:
+            if my_lut[lut][0]-my_lut[lut][1]+1 <= 8:
+                rt = "u8"
+            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 16:
+                rt = "u16"
+            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 32:
+                rt = "u32"
+            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 64:
+                rt = "u64"
+            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 128:
+                rt = "u128"
+            else:
+                rt = "PLACEHOLDER"
+        
+        print(f"""    [
+        "{lut}",
+        {my_lut[lut][0]-my_lut[lut][1]+1},
+        "{rt}",
+    ],""", file=of)
+    print("""    [
+        "none",
+        32,
+        "u32",
+    ]
+]
+""", file=of)
+    print("[type]", file=of)
+    print("names = [" + ", ".join([f"\"{type_dict[part_type]}\"" for part_type in my_part_types]) + "]", file=of)
+    for part_type in my_part_types:
+        print(f"{type_dict[part_type]} = [", file=of)
+        for sub_type in my_part_types[part_type]:
+            print(f"""    {{ name = "{sub_type[0]}", top = {sub_type[1]}, bot = {sub_type[2]} }},""", file=of)
+        print(f"]", file=of)
+    print("", file=of)
+    
+    for part_type in my_part_types:
+        format_name = type_dict[part_type].replace("type", "format")
+        print(f"""[{format_name}]
+type = \"{type_dict[part_type]}\"""", file=of)
+        print(f"[{format_name}.repr]", file=of)
+        ##TODO Figure out repr with help of objdump
+        first_match = next(instr for instr in instr_dict if part_type == "_".join(instr_dict[instr]["variable_fields"]))
+        mask = int(instr_dict[first_match]['mask'], base=0)
+        match = int(instr_dict[first_match]['match'], base=0)
+        var_fields = instr_dict[first_match]['variable_fields']
+        print(f"default = \"{get_from_objdump(first_match, mask, match, var_fields)}\"", file=of)
+        print(f"[{format_name}.instructions]", file=of)
+        for instr in instr_dict:
+            if instr == "vsetivli":
+                reg_vtypei = True
+            type_key = "_".join(instr_dict[instr]["variable_fields"])
+            if part_type == type_key:
+                print(f"{instr} = {{ mask = {instr_dict[instr]['mask']}, match = {instr_dict[instr]['match']} }}", file=of)
+        print("\n", file=of)
+    ##TODO one section for each types
+    names = []
+    if reg_int:
+        names.append("\"Register_int\"")
+    if reg_float:
+        names.append("\"Register_float\"")
+    if reg_vec:
+        names.append("\"Register_vec\"")
+    if reg_vm:
+        names.append("\"Register_vm\"")
+    if reg_vtypei:
+        names.append("\"Register_vtypei\"")
+    print(f"""[register]
+names = [{', '.join(names)}]
+number = 32""", file=of)
+    if reg_int:
+        print("""Register_int = [
+    "zero",
+    "ra",
+    "sp",
+    "gp",
+    "tp",
+    "t0",
+    "t1",
+    "t2",
+    "s0",
+    "s1",
+    "a0",
+    "a1",
+    "a2",
+    "a3",
+    "a4",
+    "a5",
+    "a6",
+    "a7",
+    "s2",
+    "s3",
+    "s4",
+    "s5",
+    "s6",
+    "s7",
+    "s8",
+    "s9",
+    "s10",
+    "s11",
+    "t3",
+    "t4",
+    "t5",
+    "t6",
+]
+""", file=of)
+    if reg_float:
+        print("""Register_float = [
+    "ft0",
+    "ft1",
+    "ft2",
+    "ft3",
+    "ft4",
+    "ft5",
+    "ft6",
+    "ft7",
+    "fs0",
+    "fs1",
+    "fa0",
+    "fa1",
+    "fa2",
+    "fa3",
+    "fa4",
+    "fa5",
+    "fa6",
+    "fa7",
+    "fs2",
+    "fs3",
+    "fs4",
+    "fs5",
+    "fs6",
+    "fs7",
+    "fs8",
+    "fs9",
+    "fs10",
+    "fs11",
+    "ft8",
+    "ft9",
+    "ft10",
+    "ft11",
+]
+""", file=of)
+    if reg_vec:
+        print("""Register_vec = [
+    "v0",
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5",
+    "v6",
+    "v7",
+    "v8",
+    "v9",
+    "v10",
+    "v11",
+    "v12",
+    "v13",
+    "v14",
+    "v15",
+    "v16",
+    "v17",
+    "v18",
+    "v19",
+    "v20",
+    "v21",
+    "v22",
+    "v23",
+    "v24",
+    "v25",
+    "v26",
+    "v27",
+    "v28",
+    "v29",
+    "v30",
+    "v31",
+]
+""", file=of)
+    if reg_vm:
+        print("""Register_vm = [
+    ", v0.t",
+    "",
+]
+""", file=of)
+    if reg_vtypei:
+        print("""[register.Register_vtypei]
+0 = "e8, m1, tu, mu"
+1 = "e8, m2, tu, mu"
+2 = "e8, m4, tu, mu"
+3 = "e8, m8, tu, mu"
+5 = "e8, mf8, tu, mu"
+6 = "e8, mf4, tu, mu"
+7 = "e8, mf2, tu, mu"
+8 = "e16, m1, tu, mu"
+9 = "e16, m2, tu, mu"
+10 = "e16, m4, tu, mu"
+11 = "e16, m8, tu, mu"
+13 = "e16, mf8, tu, mu"
+14 = "e16, mf4, tu, mu"
+15 = "e16, mf2, tu, mu"
+16 = "e32, m1, tu, mu"
+17 = "e32, m2, tu, mu"
+18 = "e32, m4, tu, mu"
+19 = "e32, m8, tu, mu"
+21 = "e32, mf8, tu, mu"
+22 = "e32, mf4, tu, mu"
+23 = "e32, mf2, tu, mu"
+24 = "e64, m1, tu, mu"
+25 = "e64, m2, tu, mu"
+26 = "e64, m4, tu, mu"
+27 = "e64, m8, tu, mu"
+29 = "e64, mf8, tu, mu"
+30 = "e64, mf4, tu, mu"
+31 = "e64, mf2, tu, mu"
+64 = "e8, m1, ta, mu"
+65 = "e8, m2, ta, mu"
+66 = "e8, m4, ta, mu"
+67 = "e8, m8, ta, mu"
+69 = "e8, mf8, ta, mu"
+70 = "e8, mf4, ta, mu"
+71 = "e8, mf2, ta, mu"
+72 = "e16, m1, ta, mu"
+73 = "e16, m2, ta, mu"
+74 = "e16, m4, ta, mu"
+75 = "e16, m8, ta, mu"
+77 = "e16, mf8, ta, mu"
+78 = "e16, mf4, ta, mu"
+79 = "e16, mf2, ta, mu"
+80 = "e32, m1, ta, mu"
+81 = "e32, m2, ta, mu"
+82 = "e32, m4, ta, mu"
+83 = "e32, m8, ta, mu"
+85 = "e32, mf8, ta, mu"
+86 = "e32, mf4, ta, mu"
+87 = "e32, mf2, ta, mu"
+88 = "e64, m1, ta, mu"
+89 = "e64, m2, ta, mu"
+90 = "e64, m4, ta, mu"
+91 = "e64, m8, ta, mu"
+93 = "e64, mf8, ta, mu"
+94 = "e64, mf4, ta, mu"
+95 = "e64, mf2, ta, mu"
+128 = "e8, m1, tu, ma"
+129 = "e8, m2, tu, ma"
+130 = "e8, m4, tu, ma"
+131 = "e8, m8, tu, ma"
+133 = "e8, mf8, tu, ma"
+134 = "e8, mf4, tu, ma"
+135 = "e8, mf2, tu, ma"
+136 = "e16, m1, tu, ma"
+137 = "e16, m2, tu, ma"
+138 = "e16, m4, tu, ma"
+139 = "e16, m8, tu, ma"
+141 = "e16, mf8, tu, ma"
+142 = "e16, mf4, tu, ma"
+143 = "e16, mf2, tu, ma"
+144 = "e32, m1, tu, ma"
+145 = "e32, m2, tu, ma"
+146 = "e32, m4, tu, ma"
+147 = "e32, m8, tu, ma"
+149 = "e32, mf8, tu, ma"
+150 = "e32, mf4, tu, ma"
+151 = "e32, mf2, tu, ma"
+152 = "e64, m1, tu, ma"
+153 = "e64, m2, tu, ma"
+154 = "e64, m4, tu, ma"
+155 = "e64, m8, tu, ma"
+157 = "e64, mf8, tu, ma"
+158 = "e64, mf4, tu, ma"
+159 = "e64, mf2, tu, ma"
+192 = "e8, m1, ta, ma"
+193 = "e8, m2, ta, ma"
+194 = "e8, m4, ta, ma"
+195 = "e8, m8, ta, ma"
+197 = "e8, mf8, ta, ma"
+198 = "e8, mf4, ta, ma"
+199 = "e8, mf2, ta, ma"
+200 = "e16, m1, ta, ma"
+201 = "e16, m2, ta, ma"
+202 = "e16, m4, ta, ma"
+203 = "e16, m8, ta, ma"
+205 = "e16, mf8, ta, ma"
+206 = "e16, mf4, ta, ma"
+207 = "e16, mf2, ta, ma"
+208 = "e32, m1, ta, ma"
+209 = "e32, m2, ta, ma"
+210 = "e32, m4, ta, ma"
+211 = "e32, m8, ta, ma"
+213 = "e32, mf8, ta, ma"
+214 = "e32, mf4, ta, ma"
+215 = "e32, mf2, ta, ma"
+216 = "e64, m1, ta, ma"
+217 = "e64, m2, ta, ma"
+218 = "e64, m4, ta, ma"
+219 = "e64, m8, ta, ma"
+221 = "e64, mf8, ta, ma"
+222 = "e64, mf4, ta, ma"
+223 = "e64, mf2, ta, ma"
+""", file=of)
+    of.close()
+
 def signed(value, width):
   if 0 <= value < (1<<(width-1)):
     return value
@@ -989,7 +1634,7 @@ if __name__ == "__main__":
     print(f'Running with args : {sys.argv}')
 
     extensions = sys.argv[1:]
-    for i in ['-c','-latex','-chisel','-sverilog','-rust', '-go', '-spinalhdl']:
+    for i in ['-c','-latex','-chisel','-sverilog','-rust', '-go', '-spinalhdl', '-toml']:
         if i in extensions:
             extensions.remove(i)
     print(f'Extensions selected : {extensions}')
@@ -1035,3 +1680,10 @@ if __name__ == "__main__":
         logging.info('instr-table.tex generated successfully')
         make_priv_latex_table()
         logging.info('priv-instr-table.tex generated successfully')
+
+    if '-toml' in sys.argv[1:]:
+        instr_dict_yaml = create_inst_dict(extensions, False, 
+                                        include_pseudo_ops=emitted_pseudo_ops)
+        instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
+        make_toml(instr_dict)
+        logging.info('instr-table.toml generated successfully')
