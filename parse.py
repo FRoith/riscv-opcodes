@@ -1378,7 +1378,7 @@ type = \"{type_dict[part_type]}\"""", file=of)
             var_fields = instr_dict[first_match]['variable_fields']
             cool_matches[first_match] = get_from_objdump(first_match, mask, match, var_fields)
         
-        most_common, _ = Counter(cool_matches.values).most_common(1)[0]
+        most_common, _ = Counter(cool_matches.values()).most_common(1)[0]
         print(f"default = \"{most_common}\"", file=of)
         for key in cool_matches:
             print(f"{key} = \"{cool_matches[key]}\"", file=of)
