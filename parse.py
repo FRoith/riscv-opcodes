@@ -1259,12 +1259,12 @@ def get_from_objdump(name, mask, match, var_fields):
             _, new_args = aquire_parts(val)
             other = re.match(re_patt, new_args).groups([1,2,3])
             i = 0
+            if len(baseline) != len(other):
+                print("---------")
+                print(baseline)
+                print(other)
+                print("---------")
             for x,y in zip(baseline, other):
-                if i == 3:
-                    print("---------")
-                    print(baseline)
-                    print(other)
-                    print("---------")
                 if x != y:
                     outformat = outformat.replace(f"${i}$", f"%{variable}%")
                 i += 1
