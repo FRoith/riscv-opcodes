@@ -1264,7 +1264,7 @@ def get_from_objdump(name, mask, match, var_fields):
             val = match | (1 << bot)
             _, new_args = aquire_parts(val)
             if len(new_args) < 1:
-                continue
+                return "<unknown>"
             other = re.match(re_patt, new_args).groups([1,2,3])
             i = 0
             for x,y in zip(baseline, other):
