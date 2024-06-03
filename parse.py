@@ -1253,10 +1253,6 @@ def get_from_objdump(name, mask, match, var_fields):
     if len(data_args) > 0:
         var_fmts = []
         reg_maps = {}
-        print(f"---------{var_fields}")
-        print(baseline)
-        print(other)
-        print("---------")
         for variable in var_fields:
             top, bot = arg_lut[variable]
             val = match | (1 << bot)
@@ -1267,6 +1263,8 @@ def get_from_objdump(name, mask, match, var_fields):
                 if x != y:
                     outformat = outformat.replace(f"${i}$", f"%{variable}%")
                 i += 1
+        if f"${i}$" in outformat:
+            outformat = outformat.replace(f"${i}$", baseline[i])
         return f"$name$ {outformat}"
     else:
         return "$name$"
