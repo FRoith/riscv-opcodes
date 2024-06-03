@@ -1243,7 +1243,6 @@ def aquire_parts(val_to_aquire):
     data = f.read()
     f.close()
     data = data.strip().split("\t")
-    print(data)
     if len(data) == 3:
         return data[1], data[2]
     else:
@@ -1253,7 +1252,7 @@ def get_from_objdump(name, mask, match, var_fields):
     data_name, data_args = aquire_parts(match)
     re_patt, outformat = create_pattern(data_args)
     baseline = re.match(re_patt, data_args).groups([1,2,3])
-    if data_name is "<unknown>":
+    if "<unknown>" in data_name:
         return "<unknown>"
     if data_name != name.replace("_", "."):
         raise Exception(f"Unknown instruction {data_name} {data_args}")
