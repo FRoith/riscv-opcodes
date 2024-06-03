@@ -1230,12 +1230,11 @@ def create_pattern(data_args):
     return patt, patt_out
 
 def aquire_parts(val_to_aquire):
-    RVPATH = "/opt/rv32/bin/"
     f = open("/tmp/rvobj", "wb")
     f.write(val_to_aquire.to_bytes(4, byteorder="little"))
     f.close()
-    os.system(f"{RVPATH}llvm-objcopy -I binary -O elf32-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
-    os.system(f"{RVPATH}llvm-objdump --mattr=+A,+M,+F,+D,+C,+V -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
+    os.system(f"llvm-objcopy -I binary -O elf32-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
+    os.system(f"llvm-objdump --mattr=+A,+M,+F,+D,+C,+V -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
     f = open("/tmp/rvdump", "r")
     data = f.read()
     f.close()
