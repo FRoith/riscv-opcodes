@@ -1243,7 +1243,11 @@ def aquire_parts(val_to_aquire):
     data = f.read()
     f.close()
     data = data.strip().split("\t")
-    return data[1], data[2]
+    print(data)
+    if len(data) == 2:
+        return data[1], data[2]
+    else:
+        return data, ""
 
 def get_from_objdump(name, mask, match, var_fields):
     data_name, data_args = aquire_parts(match)
