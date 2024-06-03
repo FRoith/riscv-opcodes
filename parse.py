@@ -1212,8 +1212,10 @@ def create_pattern(data_args):
         patt = patt.replace(Register_int[0], "%R_I%")
     if Register_float[0] in patt:
         patt = patt.replace(Register_float[0], "%R_F%")
-    if "0" in patt:
-        patt = patt.replace("0", "%I%")
+    if "0x0" in patt:
+        patt = patt.replace("0x0", "%Ih%")
+    if " 0" in patt:
+        patt = patt.replace("0", "%Id%")
     
     patt_out = patt
     patt = "^" + re.escape(patt) + "$"
@@ -1222,10 +1224,11 @@ def create_pattern(data_args):
     patt = patt.replace("%R_V%", f"({re.escape(Register_vec[0])}|{re.escape(Register_vec[1])})")
     patt = patt.replace("%R_I%", f"({re.escape(Register_int[0])}|{re.escape(Register_int[1])})")
     patt = patt.replace("%R_F%", f"({re.escape(Register_float[0])}|{re.escape(Register_float[1])})")
-    patt = patt.replace("%I%", f"\b(-?0x[0-9a-f]+|-?[0-9]+)\b")
+    patt = patt.replace("%Ih%", f"(-?0x[0-9a-fA-F]+)")
+    patt = patt.replace("%Id%", f"(-?[0-9]+)")
     i = 0
     while "%" in patt_out:
-        patt_out = re.sub("%R_[A-Z]*%|%I%", f"${i}$", patt_out, 1)
+        patt_out = re.sub("%R_[A-Z]*%|%Ih%|%Id%", f"${i}$", patt_out, 1)
         i += 1
     return patt, patt_out
 
