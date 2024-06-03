@@ -1222,7 +1222,7 @@ def create_pattern(data_args):
     patt = patt.replace("%R_V%", f"({re.escape(Register_vec[0])}|{re.escape(Register_vec[1])})")
     patt = patt.replace("%R_I%", f"({re.escape(Register_int[0])}|{re.escape(Register_int[1])})")
     patt = patt.replace("%R_F%", f"({re.escape(Register_float[0])}|{re.escape(Register_float[1])})")
-    patt = patt.replace("%I%", f"(-?0x[0-9a-f]+|-?[0-9]+)")
+    patt = patt.replace("%I%", f"(-?0x?[0-9a-f]*)")
     i = 0
     while "%" in patt_out:
         patt_out = re.sub("%R_[A-Z]*%|%I%", f"${i}$", patt_out, 1)
@@ -1278,7 +1278,6 @@ def make_toml(instr_dict):
         if type_key not in type_dict:
             i+=1
             type_dict[type_key] = f"type_{i}"
-    
     my_part_types = {}
     
     for typ in type_dict:
@@ -1295,7 +1294,7 @@ def make_toml(instr_dict):
         my_part_types[typ] = part_type
     
     of = open("instr-table.toml", "w")
-    print(f"set = {setname}\nwidth = {width}\n", file=of)
+    print(f"set = \"{setname}\"\nwidth = {width}\n", file=of)
     print("[types]\nnames = [", file=of)
     for part_type in my_part_types:
         print(f"    \"{type_dict[part_type].replace('type', 'format')}\",", file=of)
