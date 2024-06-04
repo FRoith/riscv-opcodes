@@ -1412,6 +1412,7 @@ def make_toml(instr_dict):
         full_toml["register"]["Register_vtypei"] = Register_vtypei
 
     of = open("instr-table.toml", "w")
+    print(full_toml)
     toml.dump(full_toml, of)
     of.close()
 
