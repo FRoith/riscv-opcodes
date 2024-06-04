@@ -10,6 +10,7 @@ import collections
 import yaml
 import sys
 from collections import Counter
+import toml
 
 pp = pprint.PrettyPrinter(indent=2)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:: %(message)s')
@@ -1228,10 +1229,12 @@ def create_pattern(data_args):
     patt = patt.replace("%Ih%", f"(-?0x[0-9a-fA-F]+)")
     patt = patt.replace("%Id%", f"(-?[0-9]+)")
     i = 0
+    type_map = {"%R_VM%": ["Register_vm"], "%R_VTI%": ["Register_vtypei", "hex"], "%R_V%": ["Regster_vec"], "%R_I%": ["Register_int"], "%R_F%": ["Register_float"], "%Ih%": ["VInt", "hex"], "%Id%": ["VInt"]}
+    types = [type_map[m[0]] for m in re.findall("(%R_[A-Z]*%|%Ih%|%Id%)", patt_out)]
     while "%" in patt_out:
         patt_out = re.sub("%R_[A-Z]*%|%Ih%|%Id%", f"${i}$", patt_out, 1)
         i += 1
-    return patt, patt_out
+    return patt, patt_out, types
 
 def aquire_parts(val_to_aquire):
     f = open("/tmp/rvobj", "wb")
@@ -1250,10 +1253,10 @@ def aquire_parts(val_to_aquire):
 
 def get_from_objdump(name, mask, match, var_fields):
     data_name, data_args = aquire_parts(match)
-    re_patt, outformat = create_pattern(data_args)
+    re_patt, outformat, outtypes = create_pattern(data_args)
     baseline = re.match(re_patt, data_args).groups([1,2,3])
     if "<unknown>" in data_name:
-        return "<unknown>"
+        return "<unknown>", []
     if data_name != name.replace("_", "."):
         raise Exception(f"Unknown instruction {data_name} {data_args}")
     if len(data_args) > 0:
@@ -1264,7 +1267,7 @@ def get_from_objdump(name, mask, match, var_fields):
             val = match | (1 << bot)
             _, new_args = aquire_parts(val)
             if len(new_args) < 1:
-                return "<unknown>"
+                return "<unknown>", []
             other = re.match(re_patt, new_args).groups([1,2,3])
             i = 0
             for x,y in zip(baseline, other):
@@ -1275,13 +1278,15 @@ def get_from_objdump(name, mask, match, var_fields):
             outformat = outformat.replace(f"${i-1}$", baseline[i-1])
         if f"${i}$" in outformat:
             outformat = outformat.replace(f"${i}$", baseline[i])
-        return f"$name$ {outformat}"
+        return f"$name$ {outformat}", outtypes
     else:
-        return "$name$"
+        return "$name$", []
 
 def make_toml(instr_dict):
-    setname = "RV32V"
-    width = 32
+    full_toml = {}
+    full_toml["set"] = "RV32V"
+    full_toml["width"] = 32
+
     type_dict = {}
     my_lut = {}
     i = 0
@@ -1308,12 +1313,12 @@ def make_toml(instr_dict):
             part_type.append(("none", i, 0))
         my_part_types[typ] = part_type
     
-    of = open("instr-table.toml", "w")
-    print(f"set = \"{setname}\"\nwidth = {width}\n", file=of)
-    print("[types]\nnames = [", file=of)
+    full_toml["types"] = {}
+    full_toml["types"]["names"] = []
     for part_type in my_part_types:
-        print(f"    \"{type_dict[part_type].replace('type', 'format')}\",", file=of)
-    print("]\nparts = [", file=of)
+        full_toml["types"]["names"].append(type_dict[part_type].replace('type', 'format'))
+    
+    full_toml["types"]["parts"] = []
     
     reg_int = False
     reg_float = False
@@ -1350,299 +1355,64 @@ def make_toml(instr_dict):
             else:
                 rt = "PLACEHOLDER"
         
-        print(f"""    [
-        "{lut}",
-        {my_lut[lut][0]-my_lut[lut][1]+1},
-        "{rt}",
-    ],""", file=of)
-    print("""    [
-        "none",
-        32,
-        "u32",
-    ]
-]
-""", file=of)
-    print("[type]", file=of)
-    print("names = [" + ", ".join([f"\"{type_dict[part_type]}\"" for part_type in my_part_types]) + "]", file=of)
+        full_toml["types"]["parts"].append([lut, my_lut[lut][0]-my_lut[lut][1]+1, rt])
+    full_toml["types"]["parts"].append(["none", 32, "u32"])
+
+    full_toml["type"] = {}
+    full_toml["type"]["names"] = []
     for part_type in my_part_types:
-        print(f"{type_dict[part_type]} = [", file=of)
+        full_toml["type"]["names"].append(type_dict[part_type])
+        full_toml["type"][type_dict[part_type]] = []
         for sub_type in my_part_types[part_type]:
-            print(f"""    {{ name = "{sub_type[0]}", top = {sub_type[1]}, bot = {sub_type[2]} }},""", file=of)
-        print(f"]", file=of)
-    print("", file=of)
-    
-    for part_type in my_part_types:
+            full_toml["type"][type_dict[part_type]].append({sub_type[0], sub_type[1], sub_type[2]})
         format_name = type_dict[part_type].replace("type", "format")
-        print(f"""[{format_name}]
-type = \"{type_dict[part_type]}\"""", file=of)
-        print(f"[{format_name}.repr]", file=of)
-        ##TODO Figure out repr with help of objdump
+        full_toml[format_name] = {"type": type_dict[part_type]}
+        full_toml[format_name]["repr"] = {}
         all_matches = [instr for instr in instr_dict if part_type == "_".join(instr_dict[instr]["variable_fields"])]
         cool_matches = {}
+        outtypes = {}
         for first_match in all_matches:
             mask = int(instr_dict[first_match]['mask'], base=0)
             match = int(instr_dict[first_match]['match'], base=0)
             var_fields = instr_dict[first_match]['variable_fields']
-            cool_matches[first_match] = get_from_objdump(first_match, mask, match, var_fields)
+            cool_matches[first_match], outtypes[first_match] = get_from_objdump(first_match, mask, match, var_fields)
         
         most_common, _ = Counter(cool_matches.values()).most_common(1)[0]
-        print(f"default = \"{most_common}\"", file=of)
+        full_toml[format_name]["repr"]["default"] = most_common
         for key in cool_matches:
             if cool_matches[key] != most_common:
-                print(f"{key} = \"{cool_matches[key]}\"", file=of)
+                full_toml[format_name]["repr"][key] = cool_matches[key]
 
-        print(f"[{format_name}.instructions]", file=of)
+        full_toml[format_name]["instructions"] = {}
         for instr in instr_dict:
             if instr == "vsetivli":
                 reg_vtypei = True
             type_key = "_".join(instr_dict[instr]["variable_fields"])
             if part_type == type_key:
-                print(f"{instr} = {{ mask = {instr_dict[instr]['mask']}, match = {instr_dict[instr]['match']} }}", file=of)
-        print("\n", file=of)
+                full_toml[format_name]["instructions"][instr] = { "mask": instr_dict[instr]['mask'], "match": instr_dict[instr]['match']}
     ##TODO one section for each types
-    names = []
+    full_toml["register"] = {}
+    full_toml["register"]["names"] = []
+    full_toml["register"]["number"] = 32
+
     if reg_int:
-        names.append("\"Register_int\"")
+        full_toml["register"]["names"].append("\"Register_int\"")
+        full_toml["register"]["Register_int"] = Register_int
     if reg_float:
-        names.append("\"Register_float\"")
+        full_toml["register"]["names"].append("\"Register_float\"")
+        full_toml["register"]["Register_float"] = Register_float
     if reg_vec:
-        names.append("\"Register_vec\"")
+        full_toml["register"]["names"].append("\"Register_vec\"")
+        full_toml["register"]["Register_vec"] = Register_vec
     if reg_vm:
-        names.append("\"Register_vm\"")
+        full_toml["register"]["names"].append("\"Register_vm\"")
+        full_toml["register"]["Register_vm"] = Register_vm
     if reg_vtypei:
-        names.append("\"Register_vtypei\"")
-    print(f"""[register]
-names = [{', '.join(names)}]
-number = 32""", file=of)
-    if reg_int:
-        print("""Register_int = [
-    "zero",
-    "ra",
-    "sp",
-    "gp",
-    "tp",
-    "t0",
-    "t1",
-    "t2",
-    "s0",
-    "s1",
-    "a0",
-    "a1",
-    "a2",
-    "a3",
-    "a4",
-    "a5",
-    "a6",
-    "a7",
-    "s2",
-    "s3",
-    "s4",
-    "s5",
-    "s6",
-    "s7",
-    "s8",
-    "s9",
-    "s10",
-    "s11",
-    "t3",
-    "t4",
-    "t5",
-    "t6",
-]
-""", file=of)
-    if reg_float:
-        print("""Register_float = [
-    "ft0",
-    "ft1",
-    "ft2",
-    "ft3",
-    "ft4",
-    "ft5",
-    "ft6",
-    "ft7",
-    "fs0",
-    "fs1",
-    "fa0",
-    "fa1",
-    "fa2",
-    "fa3",
-    "fa4",
-    "fa5",
-    "fa6",
-    "fa7",
-    "fs2",
-    "fs3",
-    "fs4",
-    "fs5",
-    "fs6",
-    "fs7",
-    "fs8",
-    "fs9",
-    "fs10",
-    "fs11",
-    "ft8",
-    "ft9",
-    "ft10",
-    "ft11",
-]
-""", file=of)
-    if reg_vec:
-        print("""Register_vec = [
-    "v0",
-    "v1",
-    "v2",
-    "v3",
-    "v4",
-    "v5",
-    "v6",
-    "v7",
-    "v8",
-    "v9",
-    "v10",
-    "v11",
-    "v12",
-    "v13",
-    "v14",
-    "v15",
-    "v16",
-    "v17",
-    "v18",
-    "v19",
-    "v20",
-    "v21",
-    "v22",
-    "v23",
-    "v24",
-    "v25",
-    "v26",
-    "v27",
-    "v28",
-    "v29",
-    "v30",
-    "v31",
-]
-""", file=of)
-    if reg_vm:
-        print("""Register_vm = [
-    ", v0.t",
-    "",
-]
-""", file=of)
-    if reg_vtypei:
-        print("""[register.Register_vtypei]
-0 = "e8, m1, tu, mu"
-1 = "e8, m2, tu, mu"
-2 = "e8, m4, tu, mu"
-3 = "e8, m8, tu, mu"
-5 = "e8, mf8, tu, mu"
-6 = "e8, mf4, tu, mu"
-7 = "e8, mf2, tu, mu"
-8 = "e16, m1, tu, mu"
-9 = "e16, m2, tu, mu"
-10 = "e16, m4, tu, mu"
-11 = "e16, m8, tu, mu"
-13 = "e16, mf8, tu, mu"
-14 = "e16, mf4, tu, mu"
-15 = "e16, mf2, tu, mu"
-16 = "e32, m1, tu, mu"
-17 = "e32, m2, tu, mu"
-18 = "e32, m4, tu, mu"
-19 = "e32, m8, tu, mu"
-21 = "e32, mf8, tu, mu"
-22 = "e32, mf4, tu, mu"
-23 = "e32, mf2, tu, mu"
-24 = "e64, m1, tu, mu"
-25 = "e64, m2, tu, mu"
-26 = "e64, m4, tu, mu"
-27 = "e64, m8, tu, mu"
-29 = "e64, mf8, tu, mu"
-30 = "e64, mf4, tu, mu"
-31 = "e64, mf2, tu, mu"
-64 = "e8, m1, ta, mu"
-65 = "e8, m2, ta, mu"
-66 = "e8, m4, ta, mu"
-67 = "e8, m8, ta, mu"
-69 = "e8, mf8, ta, mu"
-70 = "e8, mf4, ta, mu"
-71 = "e8, mf2, ta, mu"
-72 = "e16, m1, ta, mu"
-73 = "e16, m2, ta, mu"
-74 = "e16, m4, ta, mu"
-75 = "e16, m8, ta, mu"
-77 = "e16, mf8, ta, mu"
-78 = "e16, mf4, ta, mu"
-79 = "e16, mf2, ta, mu"
-80 = "e32, m1, ta, mu"
-81 = "e32, m2, ta, mu"
-82 = "e32, m4, ta, mu"
-83 = "e32, m8, ta, mu"
-85 = "e32, mf8, ta, mu"
-86 = "e32, mf4, ta, mu"
-87 = "e32, mf2, ta, mu"
-88 = "e64, m1, ta, mu"
-89 = "e64, m2, ta, mu"
-90 = "e64, m4, ta, mu"
-91 = "e64, m8, ta, mu"
-93 = "e64, mf8, ta, mu"
-94 = "e64, mf4, ta, mu"
-95 = "e64, mf2, ta, mu"
-128 = "e8, m1, tu, ma"
-129 = "e8, m2, tu, ma"
-130 = "e8, m4, tu, ma"
-131 = "e8, m8, tu, ma"
-133 = "e8, mf8, tu, ma"
-134 = "e8, mf4, tu, ma"
-135 = "e8, mf2, tu, ma"
-136 = "e16, m1, tu, ma"
-137 = "e16, m2, tu, ma"
-138 = "e16, m4, tu, ma"
-139 = "e16, m8, tu, ma"
-141 = "e16, mf8, tu, ma"
-142 = "e16, mf4, tu, ma"
-143 = "e16, mf2, tu, ma"
-144 = "e32, m1, tu, ma"
-145 = "e32, m2, tu, ma"
-146 = "e32, m4, tu, ma"
-147 = "e32, m8, tu, ma"
-149 = "e32, mf8, tu, ma"
-150 = "e32, mf4, tu, ma"
-151 = "e32, mf2, tu, ma"
-152 = "e64, m1, tu, ma"
-153 = "e64, m2, tu, ma"
-154 = "e64, m4, tu, ma"
-155 = "e64, m8, tu, ma"
-157 = "e64, mf8, tu, ma"
-158 = "e64, mf4, tu, ma"
-159 = "e64, mf2, tu, ma"
-192 = "e8, m1, ta, ma"
-193 = "e8, m2, ta, ma"
-194 = "e8, m4, ta, ma"
-195 = "e8, m8, ta, ma"
-197 = "e8, mf8, ta, ma"
-198 = "e8, mf4, ta, ma"
-199 = "e8, mf2, ta, ma"
-200 = "e16, m1, ta, ma"
-201 = "e16, m2, ta, ma"
-202 = "e16, m4, ta, ma"
-203 = "e16, m8, ta, ma"
-205 = "e16, mf8, ta, ma"
-206 = "e16, mf4, ta, ma"
-207 = "e16, mf2, ta, ma"
-208 = "e32, m1, ta, ma"
-209 = "e32, m2, ta, ma"
-210 = "e32, m4, ta, ma"
-211 = "e32, m8, ta, ma"
-213 = "e32, mf8, ta, ma"
-214 = "e32, mf4, ta, ma"
-215 = "e32, mf2, ta, ma"
-216 = "e64, m1, ta, ma"
-217 = "e64, m2, ta, ma"
-218 = "e64, m4, ta, ma"
-219 = "e64, m8, ta, ma"
-221 = "e64, mf8, ta, ma"
-222 = "e64, mf4, ta, ma"
-223 = "e64, mf2, ta, ma"
-""", file=of)
+        full_toml["register"]["names"].append("\"Register_vtypei\"")
+        full_toml["register"]["Register_vtypei"] = Register_vtypei
+
+    of = open("instr-table.toml", "w")
+    toml.dump(full_toml, of)
     of.close()
 
 def signed(value, width):
