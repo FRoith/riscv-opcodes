@@ -1230,7 +1230,7 @@ def create_pattern(data_args):
     patt = patt.replace("%Id%", f"(-?[0-9]+)")
     i = 0
     type_map = {"%R_VM%": ["Register_vm"], "%R_VTI%": ["Register_vtypei", "hex"], "%R_V%": ["Regster_vec"], "%R_I%": ["Register_int"], "%R_F%": ["Register_float"], "%Ih%": ["VInt", "hex"], "%Id%": ["VInt"]}
-    types = [type_map[m[0]] for m in re.findall("(%R_[A-Z]*%|%Ih%|%Id%)", patt_out)]
+    types = [type_map[m] for m in re.findall("(%R_[A-Z]*%|%Ih%|%Id%)", patt_out)]
     while "%" in patt_out:
         patt_out = re.sub("%R_[A-Z]*%|%Ih%|%Id%", f"${i}$", patt_out, 1)
         i += 1
