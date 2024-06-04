@@ -237,6 +237,18 @@ hex(222): "e64, mf4, ta, ma",
 hex(223): "e64, mf2, ta, ma"
 }
 
+class Hex():
+    def __init__(self, value: int):
+        self.value = value
+
+class TomlHexEncoder(toml.TomlEncoder):
+    def __init__(self, _dict=dict, preserve=False):
+        super(TomlHexEncoder, self).__init__(_dict, preserve)
+        self.dump_funcs[Hex] = self._dump_hex
+
+    def _dump_hex(self, v):
+        return hex(v.value)
+
 def process_enc_line(line, ext):
     '''
     This function processes each line of the encoding files (rv*). As part of
@@ -1389,7 +1401,7 @@ def make_toml(instr_dict):
                 reg_vtypei = True
             type_key = "_".join(instr_dict[instr]["variable_fields"])
             if part_type == type_key:
-                full_toml[format_name]["instructions"][instr] = { "mask": instr_dict[instr]['mask'], "match": instr_dict[instr]['match']}
+                full_toml[format_name]["instructions"][instr] = { "mask": Hex(instr_dict[instr]['mask']), "match": Hex(instr_dict[instr]['match'])}
     ##TODO one section for each types
     full_toml["register"] = {}
     full_toml["register"]["names"] = []
@@ -1413,7 +1425,7 @@ def make_toml(instr_dict):
 
     of = open("instr-table.toml", "w")
     print(full_toml)
-    toml.dump(full_toml, of)
+    toml.dump(full_toml, of, TomlHexEncoder())
     of.close()
 
 def signed(value, width):
