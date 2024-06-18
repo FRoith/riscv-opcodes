@@ -12,234 +12,16 @@ import sys
 from collections import Counter
 import toml
 
+IS_32_BIT = False
 pp = pprint.PrettyPrinter(indent=2)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:: %(message)s')
-
-Register_int = [
-    "zero",
-    "ra",
-    "sp",
-    "gp",
-    "tp",
-    "t0",
-    "t1",
-    "t2",
-    "s0",
-    "s1",
-    "a0",
-    "a1",
-    "a2",
-    "a3",
-    "a4",
-    "a5",
-    "a6",
-    "a7",
-    "s2",
-    "s3",
-    "s4",
-    "s5",
-    "s6",
-    "s7",
-    "s8",
-    "s9",
-    "s10",
-    "s11",
-    "t3",
-    "t4",
-    "t5",
-    "t6",
-]
-Register_float = [
-    "ft0",
-    "ft1",
-    "ft2",
-    "ft3",
-    "ft4",
-    "ft5",
-    "ft6",
-    "ft7",
-    "fs0",
-    "fs1",
-    "fa0",
-    "fa1",
-    "fa2",
-    "fa3",
-    "fa4",
-    "fa5",
-    "fa6",
-    "fa7",
-    "fs2",
-    "fs3",
-    "fs4",
-    "fs5",
-    "fs6",
-    "fs7",
-    "fs8",
-    "fs9",
-    "fs10",
-    "fs11",
-    "ft8",
-    "ft9",
-    "ft10",
-    "ft11",
-]
-Register_vec = [
-    "v0",
-    "v1",
-    "v2",
-    "v3",
-    "v4",
-    "v5",
-    "v6",
-    "v7",
-    "v8",
-    "v9",
-    "v10",
-    "v11",
-    "v12",
-    "v13",
-    "v14",
-    "v15",
-    "v16",
-    "v17",
-    "v18",
-    "v19",
-    "v20",
-    "v21",
-    "v22",
-    "v23",
-    "v24",
-    "v25",
-    "v26",
-    "v27",
-    "v28",
-    "v29",
-    "v30",
-    "v31",
-]
-Register_vm = [
-    ", v0.t",
-    "",
-]
-
-Register_vtypei = {
-hex(0): "e8, m1, tu, mu",
-hex(1): "e8, m2, tu, mu",
-hex(2): "e8, m4, tu, mu",
-hex(3): "e8, m8, tu, mu",
-hex(5): "e8, mf8, tu, mu",
-hex(6): "e8, mf4, tu, mu",
-hex(7): "e8, mf2, tu, mu",
-hex(8): "e16, m1, tu, mu",
-hex(9): "e16, m2, tu, mu",
-hex(10): "e16, m4, tu, mu",
-hex(11): "e16, m8, tu, mu",
-hex(13): "e16, mf8, tu, mu",
-hex(14): "e16, mf4, tu, mu",
-hex(15): "e16, mf2, tu, mu",
-hex(16): "e32, m1, tu, mu",
-hex(17): "e32, m2, tu, mu",
-hex(18): "e32, m4, tu, mu",
-hex(19): "e32, m8, tu, mu",
-hex(21): "e32, mf8, tu, mu",
-hex(22): "e32, mf4, tu, mu",
-hex(23): "e32, mf2, tu, mu",
-hex(24): "e64, m1, tu, mu",
-hex(25): "e64, m2, tu, mu",
-hex(26): "e64, m4, tu, mu",
-hex(27): "e64, m8, tu, mu",
-hex(29): "e64, mf8, tu, mu",
-hex(30): "e64, mf4, tu, mu",
-hex(31): "e64, mf2, tu, mu",
-hex(64): "e8, m1, ta, mu",
-hex(65): "e8, m2, ta, mu",
-hex(66): "e8, m4, ta, mu",
-hex(67): "e8, m8, ta, mu",
-hex(69): "e8, mf8, ta, mu",
-hex(70): "e8, mf4, ta, mu",
-hex(71): "e8, mf2, ta, mu",
-hex(72): "e16, m1, ta, mu",
-hex(73): "e16, m2, ta, mu",
-hex(74): "e16, m4, ta, mu",
-hex(75): "e16, m8, ta, mu",
-hex(77): "e16, mf8, ta, mu",
-hex(78): "e16, mf4, ta, mu",
-hex(79): "e16, mf2, ta, mu",
-hex(80): "e32, m1, ta, mu",
-hex(81): "e32, m2, ta, mu",
-hex(82): "e32, m4, ta, mu",
-hex(83): "e32, m8, ta, mu",
-hex(85): "e32, mf8, ta, mu",
-hex(86): "e32, mf4, ta, mu",
-hex(87): "e32, mf2, ta, mu",
-hex(88): "e64, m1, ta, mu",
-hex(89): "e64, m2, ta, mu",
-hex(90): "e64, m4, ta, mu",
-hex(91): "e64, m8, ta, mu",
-hex(93): "e64, mf8, ta, mu",
-hex(94): "e64, mf4, ta, mu",
-hex(95): "e64, mf2, ta, mu",
-hex(128): "e8, m1, tu, ma",
-hex(129): "e8, m2, tu, ma",
-hex(130): "e8, m4, tu, ma",
-hex(131): "e8, m8, tu, ma",
-hex(133): "e8, mf8, tu, ma",
-hex(134): "e8, mf4, tu, ma",
-hex(135): "e8, mf2, tu, ma",
-hex(136): "e16, m1, tu, ma",
-hex(137): "e16, m2, tu, ma",
-hex(138): "e16, m4, tu, ma",
-hex(139): "e16, m8, tu, ma",
-hex(141): "e16, mf8, tu, ma",
-hex(142): "e16, mf4, tu, ma",
-hex(143): "e16, mf2, tu, ma",
-hex(144): "e32, m1, tu, ma",
-hex(145): "e32, m2, tu, ma",
-hex(146): "e32, m4, tu, ma",
-hex(147): "e32, m8, tu, ma",
-hex(149): "e32, mf8, tu, ma",
-hex(150): "e32, mf4, tu, ma",
-hex(151): "e32, mf2, tu, ma",
-hex(152): "e64, m1, tu, ma",
-hex(153): "e64, m2, tu, ma",
-hex(154): "e64, m4, tu, ma",
-hex(155): "e64, m8, tu, ma",
-hex(157): "e64, mf8, tu, ma",
-hex(158): "e64, mf4, tu, ma",
-hex(159): "e64, mf2, tu, ma",
-hex(192): "e8, m1, ta, ma",
-hex(193): "e8, m2, ta, ma",
-hex(194): "e8, m4, ta, ma",
-hex(195): "e8, m8, ta, ma",
-hex(197): "e8, mf8, ta, ma",
-hex(198): "e8, mf4, ta, ma",
-hex(199): "e8, mf2, ta, ma",
-hex(200): "e16, m1, ta, ma",
-hex(201): "e16, m2, ta, ma",
-hex(202): "e16, m4, ta, ma",
-hex(203): "e16, m8, ta, ma",
-hex(205): "e16, mf8, ta, ma",
-hex(206): "e16, mf4, ta, ma",
-hex(207): "e16, mf2, ta, ma",
-hex(208): "e32, m1, ta, ma",
-hex(209): "e32, m2, ta, ma",
-hex(210): "e32, m4, ta, ma",
-hex(211): "e32, m8, ta, ma",
-hex(213): "e32, mf8, ta, ma",
-hex(214): "e32, mf4, ta, ma",
-hex(215): "e32, mf2, ta, ma",
-hex(216): "e64, m1, ta, ma",
-hex(217): "e64, m2, ta, ma",
-hex(218): "e64, m4, ta, ma",
-hex(219): "e64, m8, ta, ma",
-hex(221): "e64, mf8, ta, ma",
-hex(222): "e64, mf4, ta, ma",
-hex(223): "e64, mf2, ta, ma"
-}
 
 class Hex():
     def __init__(self, value: int):
         self.value = value
+    
+    def __repr__(self):
+        return hex(self.value)
 
 class TomlHexEncoder(toml.TomlEncoder):
     def __init__(self, _dict=dict, preserve=False):
@@ -247,7 +29,7 @@ class TomlHexEncoder(toml.TomlEncoder):
         self.dump_funcs[Hex] = self._dump_hex
 
     def _dump_hex(self, v):
-        return hex(v.value)
+        return f"{v}"
 
 def process_enc_line(line, ext):
     '''
@@ -1216,93 +998,180 @@ func encode(a obj.As) *inst {
 
 def create_pattern(data_args):
     patt = data_args
-    if Register_vm[0] in patt:
-        patt = patt.replace(Register_vm[0], "%R_VM%")
-    if Register_vtypei[hex(0)] in patt:
-        patt = patt.replace(Register_vtypei[hex(0)], "%R_VTI%")
-    if Register_vec[0] in patt:
-        patt = patt.replace(Register_vec[0], "%R_V%")
+    if Mapping_vm[0] in patt:
+        patt = patt.replace(Mapping_vm[0], "%M_VM%")
+    if Mapping_vtypei[hex(0)] in patt:
+        patt = patt.replace(Mapping_vtypei[hex(0)], "%M_VTI%")
+    if Register_vec[1] in patt:
+        patt = patt.replace(Register_vec[1], "%R_V%")
+    if Register_int_c[0] in patt:
+        patt = patt.replace(Register_int_c[0], "%R_IC%")
+    if Register_float_c[0] in patt:
+        patt = patt.replace(Register_float_c[0], "%R_FC%")
     if Register_int[0] in patt:
         patt = patt.replace(Register_int[0], "%R_I%")
     if Register_float[0] in patt:
         patt = patt.replace(Register_float[0], "%R_F%")
+    if Mapping_fence[0] in patt:
+        patt = patt.replace(Mapping_fence[0], "%M_FENCE%")
+    if Mapping_round[0] in patt:
+        patt = patt.replace(Mapping_round[0], "%M_ROUND%")
+    if Mapping_ordering[1] in patt:
+        patt = patt.replace(Mapping_ordering[1], "%M_ORDER%")
+    if Mapping_csr[hex(1)] in patt:
+        patt = patt.replace(Mapping_csr[hex(1)], "%M_CSR%")
+    if Mapping_seg[1] in patt:
+        patt = patt.replace(Mapping_seg[1], "%M_SEG%")
     if "0x0" in patt:
-        patt = patt.replace("0x0", "%Ih%")
+        patt = patt.replace(" 0x0", "%Ih%")
     if " 0" in patt:
-        patt = patt.replace("0", "%Id%")
+        patt = patt.replace(" 0", " %Id%")
     
     patt_out = patt
     patt = "^" + re.escape(patt) + "$"
-    patt = patt.replace("%R_VM%", f"({re.escape(Register_vm[0])}|{re.escape(Register_vm[1])})")
-    patt = patt.replace("%R_VTI%", f"({re.escape(Register_vtypei[hex(0)])}|{re.escape(Register_vtypei[hex(1)])})")
+    patt = patt.replace("%M_VM%", f"({re.escape(Mapping_vm[0])}|{re.escape(Mapping_vm[1])})")
+    patt = patt.replace("%M_VTI%", f"({re.escape(Mapping_vtypei[hex(0)])}|{re.escape(Mapping_vtypei[hex(1)])})")
     patt = patt.replace("%R_V%", f"({re.escape(Register_vec[0])}|{re.escape(Register_vec[1])})")
     patt = patt.replace("%R_I%", f"({re.escape(Register_int[0])}|{re.escape(Register_int[1])})")
     patt = patt.replace("%R_F%", f"({re.escape(Register_float[0])}|{re.escape(Register_float[1])})")
+    patt = patt.replace("%R_IC%", f"({re.escape(Register_int_c[0])}|{re.escape(Register_int_c[1])})")
+    patt = patt.replace("%R_FC%", f"({re.escape(Register_float_c[0])}|{re.escape(Register_float_c[1])})")
+    patt = patt.replace("%M_FENCE%", f"({re.escape(Mapping_fence[0])}|{re.escape(Mapping_fence[1])})")
+    patt = patt.replace("%M_ROUND%", f"({re.escape(Mapping_round[0])}|{re.escape(Mapping_round[1])})")
+    patt = patt.replace("%M_ORDER%", f"({re.escape(Mapping_ordering[1])}|{re.escape(Mapping_ordering[2])}|{re.escape(Mapping_ordering[3])})")
+    patt = patt.replace("%M_CSR%", f"({re.escape(Mapping_csr[hex(1)])}|{re.escape(Mapping_csr[hex(2)])})")
+    patt = patt.replace("%M_SEG%", f"({re.escape(Mapping_seg[1])}|{re.escape(Mapping_seg[0])})")
     patt = patt.replace("%Ih%", f"(-?0x[0-9a-fA-F]+)")
     patt = patt.replace("%Id%", f"(-?[0-9]+)")
     i = 0
-    type_map = {"%R_VM%": ["Register_vm"], "%R_VTI%": ["Register_vtypei", "hex"], "%R_V%": ["Regster_vec"], "%R_I%": ["Register_int"], "%R_F%": ["Register_float"], "%Ih%": ["VInt", "hex"], "%Id%": ["VInt"]}
-    types = [type_map[m] for m in re.findall("(%R_[A-Z]*%|%Ih%|%Id%)", patt_out)]
+    type_map = {"%M_SEG%": ["Mapping_seg"], "%M_CSR%": ["Mapping_csr"], "%M_ORDER%": ["Mapping_ordering"], "%M_VM%": ["Mapping_vm"], "%M_VTI%": ["Mapping_vtypei", "hex"], "%R_V%": ["Register_vec"], "%R_I%": ["Register_int"], "%R_F%": ["Register_float"], "%R_IC%": ["Register_int_c"], "%R_FC%": ["Register_float_c"], "%M_FENCE%": ["Mapping_fence"], "%M_ROUND%": ["Mapping_round"], "%Ih%": ["VInt", "hex"], "%Id%": ["VInt"]}
+    types = [type_map[m] for m in re.findall("(%R_[A-Z]*%|%M_[A-Z]*%|%Ih%|%Id%)", patt_out)]
     while "%" in patt_out:
-        patt_out = re.sub("%R_[A-Z]*%|%Ih%|%Id%", f"${i}$", patt_out, 1)
+        patt_out = re.sub("%R_[A-Z]*%|%M_[A-Z]*%|%Ih%|%Id%", f"${i}$", patt_out, 1)
         i += 1
     return patt, patt_out, types
 
-def aquire_parts(val_to_aquire):
+def aquire_parts(val_to_aquire, extensions, name):
+    extensions_loc = [ex for ex in extensions if ex != "I"]
     f = open("/tmp/rvobj", "wb")
     f.write(val_to_aquire.to_bytes(4, byteorder="little"))
     f.close()
-    os.system(f"llvm-objcopy -I binary -O elf32-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
-    os.system(f"llvm-objdump --mattr=+A,+M,+F,+D,+C,+V -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
+    os.system(f"llvm-objcopy -I binary -O elf{32 if IS_32_BIT else 64}-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
+    os.system(f"llvm-objdump{' --mattr=+' + ',+'.join(extensions_loc) if len(extensions_loc) > 0 else ''} -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
     f = open("/tmp/rvdump", "r")
     data = f.read()
     f.close()
     data = data.strip().split("\t")
-    if len(data) == 3:
-        return data[1], data[2]
-    else:
-        return data[1], ""
+    #print(data[1])
+    #print(name)
+    return (" ".join(data[1:])).replace(name, "$name$")
 
-def get_from_objdump(name, mask, match, var_fields):
-    data_name, data_args = aquire_parts(match)
+def get_from_objdump(name, mask, match, var_fields, extensions=[]):
+    for extension in extensions:
+        if extension in SUPPORTED_EXTENSIONS:
+            break
+    else:
+        return "TODO: Please implement format manually", []
+    
+    test_val = match
+    for variable in var_fields:
+        if variable in special_tests:
+            top, bot = arg_lut[variable]
+            test_val |= (special_tests[variable][0] << bot)
+
+    data_args = aquire_parts(test_val, extensions, name.replace("_", "."))
     re_patt, outformat, outtypes = create_pattern(data_args)
-    baseline = re.match(re_patt, data_args).groups([1,2,3])
-    if "<unknown>" in data_name:
+    outtype_map = {}
+    baseline = re.match(re_patt, data_args) # TODO fix instructions with illegal test states
+    if baseline is None:
         return "<unknown>", []
-    if data_name != name.replace("_", "."):
-        raise Exception(f"Unknown instruction {data_name} {data_args}")
+    else:
+        baseline = baseline.groups()
+    if "<unknown>" in data_args:
+        return "<unknown>", []
     if len(data_args) > 0:
         var_fmts = []
         reg_maps = {}
+        i = 0
+        consts = []
         for variable in var_fields:
-            top, bot = arg_lut[variable]
-            val = match | (1 << bot)
-            _, new_args = aquire_parts(val)
-            if len(new_args) < 1:
-                return "<unknown>", []
-            other = re.match(re_patt, new_args).groups([1,2,3])
+            _, bot = arg_lut[variable]
+            val = test_val
+            if variable in special_tests:
+                top, bot = arg_lut[variable]
+                val ^= (special_tests[variable][0] << bot)
+                val |= (special_tests[variable][1] << bot)
+            else:
+                val |= (1 << bot)
+            new_args = aquire_parts(val, extensions, name.replace("_", "."))
+            if " " not in new_args:
+                consts.append(variable)
+                #print(f"found potential constant field {variable} in {name}")
+                continue
+            other = re.match(re_patt, new_args)
+            if other is None:
+                consts.append(variable)
+                #print(f"found potential constant field {variable} in {name}")
+                continue
+            else:
+                other = other.groups()
             i = 0
             for x,y in zip(baseline, other):
                 if x != y:
                     outformat = outformat.replace(f"${i}$", f"%{variable}%")
+                    outtype_map[variable] = outtypes[i][0]
                 i += 1
-        if f"${i-1}$" in outformat:
-            outformat = outformat.replace(f"${i-1}$", baseline[i-1])
-        if f"${i}$" in outformat:
-            outformat = outformat.replace(f"${i}$", baseline[i])
-        return f"$name$ {outformat}", outtypes
+        unused = re.findall("\$[0-9]\$", outformat)
+        if len(consts) == 1 == len(unused):
+            outformat = outformat.replace(unused[0], consts[0])
+        #if f"${i-1}$" in outformat:
+        #    outformat = outformat.replace(f"${i-1}$", baseline[i-1])
+        #if f"${i}$" in outformat:
+        #    outformat = outformat.replace(f"${i}$", baseline[i])
+        return outformat, outtype_map
     else:
         return "$name$", []
 
-def make_toml(instr_dict):
+def make_toml(instr_dict, sets):
+    global IS_32_BIT
+    pfx = 0
+    width = 0
+    sfx = []
+    for iset in sets:
+        prefix, suffix = tuple(iset.split("_"))
+        if "32" in prefix:
+            if pfx != 32 and pfx != 0:
+                pfx = -1
+            pfx = 32
+        if "64" in prefix:
+            if pfx != 64 and pfx != 0:
+                pfx = -1
+            pfx = 64
+        if "128" in prefix:
+            raise Exception("128 bit instruction sets not yet supported")
+        if suffix.capitalize() not in sfx:
+            sfx.append(suffix.capitalize())
+        if suffix.capitalize() in COMPRESSED_SETS:
+            if width != 16 and width != 0:
+                raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
+            width = 16
+        else:
+            if width != 32 and width != 0:
+                raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
+            width = 32
+
     full_toml = {}
-    full_toml["set"] = "RV32V"
-    full_toml["width"] = 32
+    full_toml["set"] = f"RV{pfx if pfx > 0 else ''}{''.join(sfx)}"
+    full_toml["width"] = width
 
     type_dict = {}
     my_lut = {}
     i = 0
     for instr in instr_dict:
+        if "aq" in instr_dict[instr]["variable_fields"] and "rl" in instr_dict[instr]["variable_fields"]:
+            instr_dict[instr]["variable_fields"].remove("aq")
+            instr_dict[instr]["variable_fields"].remove("rl")
+            instr_dict[instr]["variable_fields"].append("aqrl")
         type_key = "_".join(instr_dict[instr]["variable_fields"])
         for part in instr_dict[instr]["variable_fields"]:
             if part not in my_lut:
@@ -1310,121 +1179,167 @@ def make_toml(instr_dict):
         if type_key not in type_dict:
             i+=1
             type_dict[type_key] = f"type_{i}"
-    my_part_types = {}
     
+    my_part_types = {}
+    new_type_dict = {}
     for typ in type_dict:
-        i = 31
         pts = typ.split("_")
-        part_type = []
-        for pt in pts:
-            if my_lut[pt][0] < i:
-                part_type.append(("none", i, my_lut[pt][0]+1))
-            part_type.append((pt, my_lut[pt][0]-my_lut[pt][1], 0))
-            i = my_lut[pt][1]-1
-        if i > 0:
-            part_type.append(("none", i, 0))
-        my_part_types[typ] = part_type
+        if "" in pts:
+            my_part_types["-0"] = [("none", width-1, 0)]
+            new_type_dict["-0"] = f"{type_dict[typ]}-0"
+            continue # in case of no types
+        pts.sort(key=lambda x: my_lut[x][0], reverse=True)
+        pts_types = [data_types[pt] for pt in pts]
+        choice_complexity = 1
+        for pts_type in pts_types:
+            if (len(pts_type) != 0):
+                choice_complexity *= len(pts_type)
+
+        for choice in range(choice_complexity):
+            i = width - 1
+            orig_choice = choice
+            part_type = []
+            for pts_type,pt in zip(pts_types,pts):
+                ppt = pt
+                if len(pts_type) > 1:
+                    ppt = f"{pt}_{pts_type[choice % len(pts_type)]}"
+                    choice //= len(pts_type)
+                if my_lut[pt][0] < i:
+                    part_type.append(("none", i, my_lut[pt][0]+1))
+                part_type.append((ppt, my_lut[pt][0]-my_lut[pt][1], 0))
+                i = my_lut[pt][1]-1
+            if i > 0:
+                part_type.append(("none", i, 0))
+            my_part_types[f"{typ}-{orig_choice}"] = part_type
+            new_type_dict[f"{typ}-{orig_choice}"] = f"{type_dict[typ]}-{orig_choice}"
+    type_dict = new_type_dict
     
     full_toml["types"] = {}
-    full_toml["types"]["names"] = []
-    for part_type in my_part_types:
-        full_toml["types"]["names"].append(type_dict[part_type].replace('type', 'format'))
+    full_toml["types"]["names"] = []        
     
     full_toml["types"]["parts"] = []
     
-    reg_int = False
-    reg_float = False
-    reg_vec = False
-    reg_vm = True
-    reg_vtypei = False
-    
     for lut in my_lut:
-        if "imm" in lut:
-            rt = "VInt"
-        elif lut.startswith("rs") or lut.startswith("rd"):
-            rt = "Register_int"
-            reg_int = True
-        elif lut.startswith("fs") or lut.startswith("fd"):
-            rt = "Register_float"
-            reg_float = True
-        elif lut.startswith("vs") or lut.startswith("vd"):
-            rt = "Register_vec"
-            reg_vec = True
-        elif lut == "vm":
-            rt = "Register_vm"
-            reg_vec = True
+        rts = data_types[lut]
+        my_lut[lut] += (rts,)
+        if lut in imm_mappings:
+            continue # skip adding part type if imm
+        if len(rts) == 0:
+            full_toml["types"]["parts"].append([lut, my_lut[lut][0]-my_lut[lut][1]+1, "VInt"])
+        elif len(rts) == 1:
+            for mapping in Mappings:
+                    if rts[0] == mapping["name"]:
+                        mapping["use"] = True
+            full_toml["types"]["parts"].append([lut, my_lut[lut][0]-my_lut[lut][1]+1, rts[0]])
         else:
-            if my_lut[lut][0]-my_lut[lut][1]+1 <= 8:
-                rt = "u8"
-            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 16:
-                rt = "u16"
-            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 32:
-                rt = "u32"
-            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 64:
-                rt = "u64"
-            elif my_lut[lut][0]-my_lut[lut][1]+1 <= 128:
-                rt = "u128"
-            else:
-                rt = "PLACEHOLDER"
-        
-        full_toml["types"]["parts"].append([lut, my_lut[lut][0]-my_lut[lut][1]+1, rt])
+            for rt in rts:
+                for mapping in Mappings:
+                    if rt == mapping["name"]:
+                        mapping["use"] = True
+                full_toml["types"]["parts"].append([f"{lut}_{rt}", my_lut[lut][0]-my_lut[lut][1]+1, rt])
     full_toml["types"]["parts"].append(["none", 32, "u32"])
+    full_toml["types"]["parts"].append(["imm", 32, "VInt"])
+    full_toml["types"]["parts"].append(["himm", 32, "VInt", "hex"])
 
     full_toml["type"] = {}
     full_toml["type"]["names"] = []
+    found = set()
     for part_type in my_part_types:
-        full_toml["type"]["names"].append(type_dict[part_type])
-        full_toml["type"][type_dict[part_type]] = []
-        for sub_type in my_part_types[part_type]:
-            full_toml["type"][type_dict[part_type]].append({sub_type[0], sub_type[1], sub_type[2]})
+        all_matches = [(instr, part_type) for instr in instr_dict if part_type.startswith(f'{"_".join(instr_dict[instr]["variable_fields"])}-')]
         format_name = type_dict[part_type].replace("type", "format")
-        full_toml[format_name] = {"type": type_dict[part_type]}
-        full_toml[format_name]["repr"] = {}
-        all_matches = [instr for instr in instr_dict if part_type == "_".join(instr_dict[instr]["variable_fields"])]
+
+        if len(all_matches) == 0:
+            continue
+
         cool_matches = {}
+        cool_match_types = {}
         outtypes = {}
-        for first_match in all_matches:
+        for first_match, ptype in all_matches:
+            if first_match in found:
+                continue
             mask = int(instr_dict[first_match]['mask'], base=0)
             match = int(instr_dict[first_match]['match'], base=0)
             var_fields = instr_dict[first_match]['variable_fields']
-            cool_matches[first_match], outtypes[first_match] = get_from_objdump(first_match, mask, match, var_fields)
+            extensions = [ex.split("_")[1].capitalize() for ex in instr_dict[first_match]['extension']]
+
+            cool_matches[first_match], outtypes[first_match] = get_from_objdump(first_match, mask, match, var_fields, extensions)
+            cool_idx = 0
+            for vfield in instr_dict[first_match]["variable_fields"]:
+                vtypes = data_types[vfield]
+
+                if vfield in imm_mappings:
+                    cool_matches[first_match] = cool_matches[first_match].replace(f"%{vfield}%", f"%imm%")
+
+                if len(vtypes) < 2 or vfield not in outtypes[first_match]:
+                    continue
+                #print(vtypes)
+                #print(outtypes[first_match][vfield])
+                cool_idx *= len(vtypes)
+                cool_idx += vtypes.index(outtypes[first_match][vfield])
+                cool_matches[first_match] = cool_matches[first_match].replace(f"%{vfield}%", f"%{vfield}_{outtypes[first_match][vfield]}%")
+            #print(ptype)
+            #print(f'{"_".join(instr_dict[first_match]["variable_fields"])}-{cool_idx}')
+            if ptype == "_".join(instr_dict[first_match]["variable_fields"]) + "-" + f"{cool_idx}":
+                cool_match_types[first_match] = f"-{cool_idx}"
+                print(f"\"{cool_matches[first_match]}\" found for \"{first_match}\"")
+                found.add(first_match)
+            else:
+                #print(f'{ptype} not for {"_".join(instr_dict[first_match]["variable_fields"]) + "-" + f"{cool_idx}"}')
+                del cool_matches[first_match]
+
+        if len(cool_matches) == 0:
+            continue
+
+        full_toml["types"]["names"].append(type_dict[part_type].replace('type', 'format'))
+        full_toml[format_name] = {"type": type_dict[part_type]}
+        full_toml[format_name]["repr"] = {}
+        full_toml[format_name]["instructions"] = {}
+        for instr in instr_dict:
+            if instr not in cool_match_types:
+                continue
+            type_key = "_".join(instr_dict[instr]["variable_fields"]) + cool_match_types[instr]
+            #print(part_type)
+            #print(type_key)
+            if part_type == type_key:
+                full_toml[format_name]["instructions"][instr] = { "mask": Hex(int(instr_dict[instr]['mask'], base=0)), "match": Hex(int(instr_dict[instr]['match'], base=0))}
+
+        if len(full_toml[format_name]["instructions"]) == 0:
+            continue
         
+        full_toml["type"]["names"].append(type_dict[part_type])
+        full_toml["type"][type_dict[part_type]] = []
+        for sub_type in my_part_types[part_type]:
+            if sub_type[0] in imm_mappings:
+                for mapping in imm_mappings[sub_type[0]]:
+                    p = {}
+                    p["name"] = "imm"
+                    p["top"] = mapping[0]
+                    p["bot"] = mapping[1]
+                    full_toml["type"][type_dict[part_type]].append(p)
+            else:
+                p = {}
+                p["name"] = sub_type[0]
+                p["top"] = sub_type[1]
+                p["bot"] = sub_type[2]
+                full_toml["type"][type_dict[part_type]].append(p)      
+
         most_common, _ = Counter(cool_matches.values()).most_common(1)[0]
         full_toml[format_name]["repr"]["default"] = most_common
         for key in cool_matches:
             if cool_matches[key] != most_common:
                 full_toml[format_name]["repr"][key] = cool_matches[key]
 
-        full_toml[format_name]["instructions"] = {}
-        for instr in instr_dict:
-            if instr == "vsetivli":
-                reg_vtypei = True
-            type_key = "_".join(instr_dict[instr]["variable_fields"])
-            if part_type == type_key:
-                full_toml[format_name]["instructions"][instr] = { "mask": Hex(instr_dict[instr]['mask']), "match": Hex(instr_dict[instr]['match'])}
-    ##TODO one section for each types
-    full_toml["register"] = {}
-    full_toml["register"]["names"] = []
-    full_toml["register"]["number"] = 32
+##TODO one section for each types
+    full_toml["mappings"] = {}
+    full_toml["mappings"]["names"] = []
+    full_toml["mappings"]["number"] = 32
 
-    if reg_int:
-        full_toml["register"]["names"].append("\"Register_int\"")
-        full_toml["register"]["Register_int"] = Register_int
-    if reg_float:
-        full_toml["register"]["names"].append("\"Register_float\"")
-        full_toml["register"]["Register_float"] = Register_float
-    if reg_vec:
-        full_toml["register"]["names"].append("\"Register_vec\"")
-        full_toml["register"]["Register_vec"] = Register_vec
-    if reg_vm:
-        full_toml["register"]["names"].append("\"Register_vm\"")
-        full_toml["register"]["Register_vm"] = Register_vm
-    if reg_vtypei:
-        full_toml["register"]["names"].append("\"Register_vtypei\"")
-        full_toml["register"]["Register_vtypei"] = Register_vtypei
+    for mapping in Mappings:
+        if mapping["use"]:
+            full_toml["mappings"]["names"].append(mapping["name"])
+            full_toml["mappings"][mapping["name"]] = mapping["pointer"]
 
     of = open("instr-table.toml", "w")
-    print(full_toml)
     toml.dump(full_toml, of, TomlHexEncoder())
     of.close()
 
@@ -1490,5 +1405,5 @@ if __name__ == "__main__":
         instr_dict_yaml = create_inst_dict(extensions, False, 
                                         include_pseudo_ops=emitted_pseudo_ops)
         instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
-        make_toml(instr_dict)
+        make_toml(instr_dict, extensions)
         logging.info('instr-table.toml generated successfully')
