@@ -1123,7 +1123,7 @@ def get_from_objdump(name, mask, match, var_fields, extensions=[]):
                 i += 1
         unused = re.findall("\$[0-9]\$", outformat)
         if len(consts) == 1 == len(unused):
-            outformat = outformat.replace(unused[0], consts[0])
+            outformat = outformat.replace(unused[0], f"%{consts[0]}%")
         #if f"${i-1}$" in outformat:
         #    outformat = outformat.replace(f"${i-1}$", baseline[i-1])
         #if f"${i}$" in outformat:
@@ -1172,23 +1172,23 @@ def make_toml(instr_dict, sets):
             instr_dict[instr]["variable_fields"].remove("aq")
             instr_dict[instr]["variable_fields"].remove("rl")
             instr_dict[instr]["variable_fields"].append("aqrl")
-        type_key = "_".join(instr_dict[instr]["variable_fields"])
+        type_key = "-".join(instr_dict[instr]["variable_fields"])
         for part in instr_dict[instr]["variable_fields"]:
             if part not in my_lut:
                 my_lut[part] = arg_lut[part]
         if type_key not in type_dict:
             i+=1
-            type_dict[type_key] = f"type_{i}"
+            type_dict[type_key] = f"type-{i}"
     
     my_part_types = {}
     new_type_dict = {}
     for typ in type_dict:
-        pts = typ.split("_")
+        pts = typ.split("-")
         if "" in pts:
             my_part_types["-0"] = [("none", width-1, 0)]
             new_type_dict["-0"] = f"{type_dict[typ]}-0"
             continue # in case of no types
-        pts.sort(key=lambda x: my_lut[x][0], reverse=True)
+        pts.sort(key=lambda x: arg_lut[x][0], reverse=True)
         pts_types = [data_types[pt] for pt in pts]
         choice_complexity = 1
         for pts_type in pts_types:
@@ -1302,6 +1302,8 @@ def make_toml(instr_dict, sets):
             #print(type_key)
             if part_type == type_key:
                 full_toml[format_name]["instructions"][instr] = { "mask": Hex(int(instr_dict[instr]['mask'], base=0)), "match": Hex(int(instr_dict[instr]['match'], base=0))}
+                if any([vf in unsigned_list for vf in instr_dict[instr]['variable_fields']]):
+                    full_toml[format_name]["instructions"][instr]["unsigned"] = True
 
         if len(full_toml[format_name]["instructions"]) == 0:
             continue
@@ -1323,11 +1325,16 @@ def make_toml(instr_dict, sets):
                 p["bot"] = sub_type[2]
                 full_toml["type"][type_dict[part_type]].append(p)      
 
-        most_common, _ = Counter(cool_matches.values()).most_common(1)[0]
-        full_toml[format_name]["repr"]["default"] = most_common
-        for key in cool_matches:
-            if cool_matches[key] != most_common:
-                full_toml[format_name]["repr"][key] = cool_matches[key]
+        cool_counter = Counter(cool_matches.values())
+        if len(cool_counter) == 2 and "<unknown>" in cool_counter: # if only one choice for unknown repr, just assume
+            most_common, _ = list(filter(lambda x : x[0] != "<unknown>", cool_counter.most_common(2)))[0]
+            full_toml[format_name]["repr"]["default"] = most_common
+        else:
+            most_common, _ = cool_counter.most_common(1)[0]
+            full_toml[format_name]["repr"]["default"] = most_common
+            for key in cool_matches:
+                if cool_matches[key] != most_common:
+                    full_toml[format_name]["repr"][key] = cool_matches[key]
 
 ##TODO one section for each types
     full_toml["mappings"] = {}
