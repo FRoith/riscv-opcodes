@@ -1187,8 +1187,8 @@ def make_toml(instr_dict, sets):
     for typ in type_dict:
         pts = typ.split("-")
         if "" in pts:
-            my_part_types["-0"] = [("none", width-1, 0)]
-            new_type_dict["-0"] = f"{type_dict[typ]}-0"
+            my_part_types["@0"] = [("none", width-1, 0)]
+            new_type_dict["@0"] = f"{type_dict[typ]}@0"
             continue # in case of no types
         pts.sort(key=lambda x: arg_lut[x][0], reverse=True)
         pts_types = [data_types[pt] for pt in pts]
@@ -1212,8 +1212,8 @@ def make_toml(instr_dict, sets):
                 i = my_lut[pt][1]-1
             if i > 0:
                 part_type.append(("none", i, 0))
-            my_part_types[f"{typ}-{orig_choice}"] = part_type
-            new_type_dict[f"{typ}-{orig_choice}"] = f"{type_dict[typ]}-{orig_choice}"
+            my_part_types[f"{typ}@{orig_choice}"] = part_type
+            new_type_dict[f"{typ}@{orig_choice}"] = f"{type_dict[typ]}-{orig_choice}"
     type_dict = new_type_dict
     
     full_toml["types"] = {}
@@ -1247,7 +1247,7 @@ def make_toml(instr_dict, sets):
     full_toml["type"]["names"] = []
     found = set()
     for part_type in my_part_types:
-        all_matches = [(instr, part_type) for instr in instr_dict if part_type.startswith(f'{"_".join(instr_dict[instr]["variable_fields"])}-')]
+        all_matches = [(instr, part_type) for instr in instr_dict if part_type.startswith(f'{"-".join(instr_dict[instr]["variable_fields"])}@')]
         format_name = type_dict[part_type].replace("type", "format")
 
         if len(all_matches) == 0:
@@ -1281,8 +1281,8 @@ def make_toml(instr_dict, sets):
                 cool_matches[first_match] = cool_matches[first_match].replace(f"%{vfield}%", f"%{vfield}_{outtypes[first_match][vfield]}%")
             #print(ptype)
             #print(f'{"_".join(instr_dict[first_match]["variable_fields"])}-{cool_idx}')
-            if ptype == "_".join(instr_dict[first_match]["variable_fields"]) + "-" + f"{cool_idx}":
-                cool_match_types[first_match] = f"-{cool_idx}"
+            if ptype == "-".join(instr_dict[first_match]["variable_fields"]) + "@" + f"{cool_idx}":
+                cool_match_types[first_match] = f"@{cool_idx}"
                 print(f"\"{cool_matches[first_match]}\" found for \"{first_match}\"")
                 found.add(first_match)
             else:
@@ -1299,7 +1299,7 @@ def make_toml(instr_dict, sets):
         for instr in instr_dict:
             if instr not in cool_match_types:
                 continue
-            type_key = "_".join(instr_dict[instr]["variable_fields"]) + cool_match_types[instr]
+            type_key = "-".join(instr_dict[instr]["variable_fields"]) + cool_match_types[instr]
             #print(part_type)
             #print(type_key)
             if part_type == type_key:
