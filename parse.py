@@ -1188,7 +1188,7 @@ def make_toml(instr_dict, sets):
         pts = typ.split("-")
         if "" in pts:
             my_part_types["@0"] = [("none", width-1, 0)]
-            new_type_dict["@0"] = f"{type_dict[typ]}@0"
+            new_type_dict["@0"] = f"{type_dict[typ]}-0"
             continue # in case of no types
         pts.sort(key=lambda x: arg_lut[x][0], reverse=True)
         pts_types = [data_types[pt] for pt in pts]
