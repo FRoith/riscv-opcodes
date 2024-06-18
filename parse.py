@@ -13,6 +13,7 @@ from collections import Counter
 import toml
 
 IS_32_BIT = False
+IS_COMPRESSED = False
 pp = pprint.PrettyPrinter(indent=2)
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:: %(message)s')
 
@@ -1054,7 +1055,7 @@ def create_pattern(data_args):
 def aquire_parts(val_to_aquire, extensions, name):
     extensions_loc = [ex for ex in extensions if ex != "I"]
     f = open("/tmp/rvobj", "wb")
-    f.write(val_to_aquire.to_bytes(4, byteorder="little"))
+    f.write(val_to_aquire.to_bytes(2 if IS_COMPRESSED else 4, byteorder="little"))
     f.close()
     os.system(f"llvm-objcopy -I binary -O elf{32 if IS_32_BIT else 64}-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
     os.system(f"llvm-objdump{' --mattr=+' + ',+'.join(extensions_loc) if len(extensions_loc) > 0 else ''} -d -Mno-aliases /tmp/rvelf | tail -n 1 > /tmp/rvdump")
@@ -1133,7 +1134,7 @@ def get_from_objdump(name, mask, match, var_fields, extensions=[]):
         return "$name$", []
 
 def make_toml(instr_dict, sets):
-    global IS_32_BIT
+    global IS_32_BIT, IS_COMPRESSED
     pfx = 0
     width = 0
     sfx = []
@@ -1155,6 +1156,7 @@ def make_toml(instr_dict, sets):
             if width != 16 and width != 0:
                 raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
             width = 16
+            IS_COMPRESSED = True
         else:
             if width != 32 and width != 0:
                 raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
