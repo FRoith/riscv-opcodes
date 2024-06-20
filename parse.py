@@ -1054,7 +1054,7 @@ def create_pattern(data_args):
     return patt, patt_out, types
 
 def aquire_parts(val_to_aquire, extensions, name):
-    extensions_loc = [ex for ex in extensions if ex != "I"]
+    extensions_loc = [ex.capitalize() for ex in extensions if ex != "I"]
     f = open("/tmp/rvobj", "wb")
     f.write(val_to_aquire.to_bytes(2 if IS_COMPRESSED else 4, byteorder="little"))
     f.close()
