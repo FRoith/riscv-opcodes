@@ -1369,7 +1369,7 @@ def make_tests(instr_dict, sets):
             f.write(field.to_bytes(4, byteorder="little"))
     f.close()
     os.system(f"llvm-objcopy -I binary -O elf{32 if IS_32_BIT else 64}-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
-    os.system(f"llvm-objdump{' --mattr=+' + ',+'.join(extensions_loc) if len(extensions_loc) > 0 else ''} -d -Mno-aliases /tmp/rvelf | tail -n +10 | grep -v -E <unknown> | awk -f reformat.awk > tests.test")
+    os.system(f"bash -c \"llvm-objdump{' --mattr=+' + ',+'.join(extensions_loc) if len(extensions_loc) > 0 else ''} -d -Mno-aliases /tmp/rvelf | tail -n +10 | grep -v -E <unknown> | awk -f reformat.awk > tests.test\"")
 
 
 def signed(value, width):
