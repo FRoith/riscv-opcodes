@@ -1358,6 +1358,7 @@ def make_tests(instr_dict, sets):
     f = open("/tmp/rvobj", "wb")
     splitsets = [s.split('_')[1].capitalize() for s in sets]
     extensions_loc = [ex for ex in splitsets if ex != "I"]
+    print(instr_dict)
 
     for instr in instr_dict:
         mask = int(instr_dict[instr]['mask'], base=0)
@@ -1366,7 +1367,7 @@ def make_tests(instr_dict, sets):
 
 
         for i in range(30):
-            field = (~mask) & int.from_bytes(random.randbytes(4), byteorder="little")
+            field = match | ((~mask) & int.from_bytes(random.randbytes(4), byteorder="little"))
             f.write(field.to_bytes(4, byteorder="little"))
     f.close()
     os.system(f"llvm-objcopy -I binary -O elf{32 if IS_32_BIT else 64}-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
@@ -1435,15 +1436,15 @@ if __name__ == "__main__":
         IS_32_BIT = True
 
     if '-toml' in sys.argv[1:]:
-        instr_dict_yaml = create_inst_dict(extensions, False, 
+        instr_dict_toml = create_inst_dict(extensions, False, 
                                         include_pseudo_ops=emitted_pseudo_ops)
-        instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
-        make_toml(instr_dict, extensions)
+        instr_dict_toml = collections.OrderedDict(sorted(instr_dict_toml.items()))
+        make_toml(instr_dict_toml, extensions)
         logging.info('instr-table.toml generated successfully')
 
     if '-tests' in sys.argv[1:]:
-        instr_dict_yaml = create_inst_dict(extensions, False, 
+        instr_dict_toml = create_inst_dict(extensions, False, 
                                         include_pseudo_ops=emitted_pseudo_ops)
-        instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
-        make_tests(instr_dict, extensions)
+        instr_dict_toml = collections.OrderedDict(sorted(instr_dict_toml.items()))
+        make_tests(instr_dict_toml, extensions)
         logging.info('tests.test generated successfully')
