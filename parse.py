@@ -1356,7 +1356,8 @@ def make_toml(instr_dict, sets):
 
 def make_tests(instr_dict, sets):
     f = open("/tmp/rvobj", "wb")
-    extensions_loc = [ex for ex in SUPPORTED_EXTENSIONS if ex != "I"]
+    splitsets = [s.split('_')[1].capitalize() for s in sets]
+    extensions_loc = [ex for ex in splitsets if ex != "I"]
 
     for instr in instr_dict:
         mask = int(instr_dict[instr]['mask'], base=0)
