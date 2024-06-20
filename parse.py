@@ -11,6 +11,7 @@ import yaml
 import sys
 from collections import Counter
 import toml
+import random
 
 IS_32_BIT = False
 IS_COMPRESSED = False
@@ -1134,12 +1135,12 @@ def get_from_objdump(name, mask, match, var_fields, extensions=[]):
         return "$name$", []
 
 def make_toml(instr_dict, sets):
-    global IS_32_BIT, IS_COMPRESSED
+    global IS_COMPRESSED
     pfx = 0
     width = 0
     sfx = []
     for iset in sets:
-        prefix, suffix = tuple(iset.split("_"))
+        prefix, *suffix = tuple(iset.split("_"))
         if "32" in prefix:
             if pfx != 32 and pfx != 0:
                 pfx = -1
@@ -1150,17 +1151,18 @@ def make_toml(instr_dict, sets):
             pfx = 64
         if "128" in prefix:
             raise Exception("128 bit instruction sets not yet supported")
-        if suffix.capitalize() not in sfx:
-            sfx.append(suffix.capitalize())
-        if suffix.capitalize() in COMPRESSED_SETS:
-            if width != 16 and width != 0:
-                raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
-            width = 16
-            IS_COMPRESSED = True
-        else:
-            if width != 32 and width != 0:
-                raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
-            width = 32
+        for s in suffix:
+            if s.capitalize() not in sfx:
+                sfx.append(s.capitalize())
+            if s.capitalize() in COMPRESSED_SETS:
+                if width != 16 and width != 0:
+                    raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
+                width = 16
+                IS_COMPRESSED = True
+            else:
+                if width != 32 and width != 0:
+                    raise Exception("Combining 16 and 32 bit instructions in one TOML file is not supported!")
+                width = 32
 
     full_toml = {}
     full_toml["set"] = f"RV{pfx if pfx > 0 else ''}{''.join(sfx)}"
@@ -1352,6 +1354,24 @@ def make_toml(instr_dict, sets):
     toml.dump(full_toml, of, TomlHexEncoder())
     of.close()
 
+def make_tests(instr_dict, sets):
+    f = open("/tmp/rvobj", "wb")
+    extensions_loc = [ex for ex in SUPPORTED_EXTENSIONS if ex != "I"]
+
+    for instr in instr_dict:
+        mask = int(instr_dict[instr]['mask'], base=0)
+        match = int(instr_dict[instr]['match'], base=0)
+        var_fields = instr_dict[instr]['variable_fields']
+
+
+        for i in range(30):
+            field = (~mask) & int.from_bytes(random.randbytes(4), byteorder="little")
+            f.write(field.to_bytes(4, byteorder="little"))
+    f.close()
+    os.system(f"llvm-objcopy -I binary -O elf{32 if IS_32_BIT else 64}-littleriscv --rename-section=.data=.text,code /tmp/rvobj /tmp/rvelf")
+    os.system(f"llvm-objdump{' --mattr=+' + ',+'.join(extensions_loc) if len(extensions_loc) > 0 else ''} -d -Mno-aliases /tmp/rvelf | tail -n +10 | grep -v -E <unknown> | awk -f reformat.awk > tests.test")
+
+
 def signed(value, width):
   if 0 <= value < (1<<(width-1)):
     return value
@@ -1363,7 +1383,7 @@ if __name__ == "__main__":
     print(f'Running with args : {sys.argv}')
 
     extensions = sys.argv[1:]
-    for i in ['-c','-latex','-chisel','-sverilog','-rust', '-go', '-spinalhdl', '-toml']:
+    for i in ['-c','-latex','-chisel','-sverilog','-rust', '-go', '-spinalhdl', '-toml', '-32', '-tests']:
         if i in extensions:
             extensions.remove(i)
     print(f'Extensions selected : {extensions}')
@@ -1410,9 +1430,19 @@ if __name__ == "__main__":
         make_priv_latex_table()
         logging.info('priv-instr-table.tex generated successfully')
 
+    if "-32" in sys.argv[1:]:
+        IS_32_BIT = True
+
     if '-toml' in sys.argv[1:]:
         instr_dict_yaml = create_inst_dict(extensions, False, 
                                         include_pseudo_ops=emitted_pseudo_ops)
         instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
         make_toml(instr_dict, extensions)
         logging.info('instr-table.toml generated successfully')
+
+    if '-tests' in sys.argv[1:]:
+        instr_dict_yaml = create_inst_dict(extensions, False, 
+                                        include_pseudo_ops=emitted_pseudo_ops)
+        instr_dict_yaml = collections.OrderedDict(sorted(instr_dict_yaml.items()))
+        make_tests(instr_dict, extensions)
+        logging.info('tests.test generated successfully')
