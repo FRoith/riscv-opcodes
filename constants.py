@@ -441,6 +441,11 @@ data_types = {
     "c_rs2": ["Register_int", "Register_float"],
     "c_sreg1": ["Register_int_c", "Register_float_c"],
     "c_sreg2": ["Register_int_c", "Register_float_c"],
+    "mop_r_t_30": [],
+    "mop_r_t_27_26": [],
+    "mop_r_t_21_20": [],
+    "mop_rr_t_30": [],
+    "mop_rr_t_27_26": [],
 }
 
 special_tests = {
@@ -470,6 +475,11 @@ unsigned_list = [
     "c_nzuimm10",
     "c_uimm7lo",
     "c_uimm7hi",
+    "mop_r_t_30",
+    "mop_r_t_27_26",
+    "mop_r_t_21_20",
+    "mop_rr_t_30",
+    "mop_rr_t_27_26",
 ]
 
 imm_mappings = {
@@ -524,7 +534,11 @@ imm_mappings = {
     "c_uimm1": [[1, 1]],    # TODO special case        
     "c_spimm": [[5, 4]],    # TODO special case        
     "c_index": [[7, 0]],    # TODO must be >= 32        
-
+    "mop_r_t_30": [[4, 4]],
+    "mop_r_t_27_26": [[3, 2]],
+    "mop_r_t_21_20": [[1, 0]],
+    "mop_rr_t_30": [[2, 2]],
+    "mop_rr_t_27_26": [[1, 0]],
 }
 
 Register_int = [
